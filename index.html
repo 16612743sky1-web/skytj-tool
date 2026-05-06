@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>스카이티제이 · 용지 발송 관리</title>
+<title>스카이티제이 · 월말 정산</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
@@ -282,8 +282,7 @@ tbody td { padding:8px 12px; vertical-align:middle; }
     <span>스카이티제이 용지관리</span>
   </div>
   <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('daily')">📅 매일 발송</button>
-    <button class="tab-btn" onclick="switchTab('monthly')">📊 월말 정산</button>
+    <button class="tab-btn active" onclick="switchTab('monthly')">📊 월말 정산</button>
   </div>
 </nav>
 
@@ -292,7 +291,7 @@ tbody td { padding:8px 12px; vertical-align:middle; }
 <!-- ══════════════════════════════════════
      PAGE 1: 매일 발송
 ════════════════════════════════════════ -->
-<div class="page active" id="page-daily">
+<div class="page" id="page-daily">
 
   <div class="steps">
     <div class="step active" id="step1"><span class="step-num">1</span><span class="step-label">월 선택</span></div>
@@ -363,7 +362,7 @@ tbody td { padding:8px 12px; vertical-align:middle; }
 <!-- ══════════════════════════════════════
      PAGE 2: 월말 정산
 ════════════════════════════════════════ -->
-<div class="page" id="page-monthly">
+<div class="page active" id="page-monthly">
 
   <!-- 파일 업로드 -->
   <div class="card">
@@ -570,11 +569,19 @@ function loadGoogleSheet() {
     .then(data => {
       if (data.error) throw new Error(data.error);
       rawApiData = data;
-      dailyRows = data.rows;
-      document.getElementById('apiStatus').textContent = `✅ ${data.sheetName} — ${data.total}건 불러오기 완료`;
+      // 노란색(완료), 빨간색(입금대기) 제외 — 흰색만 발송 대상
+      const filtered = data.rows.filter(r => {
+        const bg = (r.색상||'').toLowerCase().trim();
+        if (bg === '#ffff00') return false; // 발송완료
+        if (isRed(bg)) return false;        // 입금대기
+        return true;
+      });
+      dailyRows = filtered;
+      const excluded = data.total - filtered.length;
+      document.getElementById('apiStatus').textContent = `✅ ${data.sheetName} — 발송 대상 ${filtered.length}건 (완료/보류 ${excluded}건 제외)`;
       document.getElementById('apiStatus').className = 'alert alert-success';
       document.getElementById('loadGsBtn').disabled = false;
-      renderDailyPreview(data.rows, data.sheetName);
+      renderDailyPreview(filtered, data.sheetName);
     })
     .catch(err => {
       document.getElementById('apiStatus').textContent = '❌ 불러오기 실패: ' + err.message;
@@ -834,6 +841,13 @@ function renderMonthly(results, rows1, rows2, kisRows, ourTotal, aceTotal, kisQt
 // ═══════════════════════════════════
 // UTILS
 // ═══════════════════════════════════
+function isRed(hex) {
+  if (!hex || hex === '#ffffff' || hex === 'white') return false;
+  const h = hex.replace('#','');
+  if (h.length !== 6) return false;
+  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  return r > 180 && g < 120 && b < 120;
+}
 function norm(s){ return String(s||'').replace(/\s+/g,'').toLowerCase(); }
 function normAddr(s){ return String(s||'').replace(/\s+/g,'').replace(/[,\-()]/g,''); }
 function fmtDate(v){
