@@ -8,363 +8,95 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 :root {
-  --bg: #f4f6f9;
-  --white: #ffffff;
-  --border: #e2e8f0;
-  --border2: #cbd5e1;
-  --text: #1e293b;
-  --text2: #475569;
-  --text3: #94a3b8;
-  --blue: #2563eb;
-  --blue-light: #eff6ff;
-  --blue-mid: #dbeafe;
-  --green: #16a34a;
-  --green-light: #f0fdf4;
-  --green-mid: #bbf7d0;
-  --orange: #ea580c;
-  --orange-light: #fff7ed;
-  --red: #dc2626;
-  --red-light: #fef2f2;
-  --yellow: #d97706;
-  --yellow-light: #fffbeb;
-  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-  --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
-  --radius: 12px;
+  --bg:#f4f6f9;--white:#ffffff;--border:#e2e8f0;--border2:#cbd5e1;
+  --text:#1e293b;--text2:#475569;--text3:#94a3b8;
+  --blue:#2563eb;--blue-light:#eff6ff;--blue-mid:#dbeafe;
+  --green:#16a34a;--green-light:#f0fdf4;--green-mid:#bbf7d0;
+  --orange:#ea580c;--red:#dc2626;--yellow:#d97706;--yellow-light:#fffbeb;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --radius:12px;
 }
-
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Pretendard',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
-
-/* ── NAV ── */
-.nav {
-  background:var(--white);
-  border-bottom:1px solid var(--border);
-  padding:0 28px;
-  display:flex; align-items:center; gap:0;
-  height:56px;
-  position:sticky; top:0; z-index:100;
-  box-shadow: var(--shadow);
-}
-.nav-brand {
-  display:flex; align-items:center; gap:10px;
-  margin-right:32px;
-}
-.nav-brand .icon {
-  width:32px; height:32px;
-  background:linear-gradient(135deg,#2563eb,#7c3aed);
-  border-radius:8px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:16px;
-}
-.nav-brand span { font-size:15px; font-weight:700; color:var(--text); }
-.nav-tabs { display:flex; height:100%; }
-.tab-btn {
-  height:100%; padding:0 20px;
-  border:none; background:transparent;
-  font-family:'Pretendard',sans-serif;
-  font-size:14px; font-weight:500; color:var(--text2);
-  cursor:pointer; border-bottom:2px solid transparent;
-  transition:all .15s; white-space:nowrap;
-}
-.tab-btn:hover { color:var(--blue); }
-.tab-btn.active { color:var(--blue); border-bottom-color:var(--blue); font-weight:600; }
-
-/* ── MAIN ── */
-.main { padding:28px; max-width:1400px; margin:0 auto; }
-
-.page { display:none; }
-.page.active { display:block; }
-
-/* ── CARDS ── */
-.card {
-  background:var(--white);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:24px;
-  box-shadow:var(--shadow);
-  margin-bottom:20px;
-}
-.card-title {
-  font-size:15px; font-weight:700; color:var(--text);
-  display:flex; align-items:center; gap:8px;
-  margin-bottom:16px;
-}
-.card-title .sub { font-size:12px; font-weight:400; color:var(--text3); }
-
-/* ── UPLOAD ── */
-.upload-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.upload-zone {
-  border:2px dashed var(--border2);
-  border-radius:10px; padding:28px 20px;
-  text-align:center; cursor:pointer;
-  transition:all .2s; position:relative;
-  background:var(--bg);
-}
-.upload-zone:hover { border-color:var(--blue); background:var(--blue-light); }
-.upload-zone.loaded { border-color:var(--green); border-style:solid; background:var(--green-light); }
-.upload-zone input { display:none; }
-.upload-icon { font-size:28px; margin-bottom:8px; }
-.upload-name { font-size:13px; font-weight:600; color:var(--text); margin-bottom:4px; }
-.upload-desc { font-size:12px; color:var(--text3); line-height:1.5; }
-.upload-file { font-size:11px; color:var(--green); font-family:'JetBrains Mono',monospace; margin-top:8px; }
-
-/* ── FORM ROW ── */
-.form-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.form-label { font-size:13px; color:var(--text2); font-weight:500; white-space:nowrap; }
-.form-input {
-  border:1px solid var(--border2); border-radius:8px;
-  padding:8px 12px; font-family:'JetBrains Mono',monospace;
-  font-size:13px; color:var(--text); background:var(--white);
-  transition:border .15s;
-}
-.form-input:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
-.form-hint { font-size:12px; color:var(--text3); }
-
-/* ── BUTTONS ── */
-.btn {
-  border:none; border-radius:8px; cursor:pointer;
-  font-family:'Pretendard',sans-serif; font-weight:600;
-  transition:all .15s; display:inline-flex; align-items:center; gap:6px;
-}
-.btn-primary {
-  background:var(--blue); color:#fff;
-  padding:10px 20px; font-size:14px;
-}
-.btn-primary:hover { background:#1d4ed8; transform:translateY(-1px); box-shadow:0 4px 12px rgba(37,99,235,.3); }
-.btn-primary:disabled { background:#93c5fd; cursor:not-allowed; transform:none; box-shadow:none; }
-.btn-success {
-  background:var(--green); color:#fff;
-  padding:10px 20px; font-size:14px;
-}
-.btn-success:hover { background:#15803d; transform:translateY(-1px); }
-.btn-ghost {
-  background:transparent; color:var(--text2);
-  border:1px solid var(--border2);
-  padding:7px 14px; font-size:13px;
-}
-.btn-ghost:hover { background:var(--bg); border-color:var(--blue); color:var(--blue); }
-.btn-lg { padding:13px 28px; font-size:15px; width:100%; justify-content:center; }
-
-/* ── STATS ── */
-.stats-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px; }
-.stat {
-  background:var(--white); border:1px solid var(--border);
-  border-radius:10px; padding:16px;
-  box-shadow:var(--shadow);
-}
-.stat .label { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
-.stat .value { font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace; }
-.stat .hint { font-size:11px; color:var(--text3); margin-top:3px; }
-.stat.blue .value { color:var(--blue); }
-.stat.green .value { color:var(--green); }
-.stat.orange .value { color:var(--orange); }
-.stat.red .value { color:var(--red); }
-
-/* ── TABLE ── */
-.table-wrap { border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-.table-scroll { overflow-y:auto; max-height:460px; }
-.table-scroll::-webkit-scrollbar { width:5px; }
-.table-scroll::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
-table { width:100%; border-collapse:collapse; font-size:12px; }
-thead { position:sticky; top:0; z-index:2; }
-thead th {
-  background:#f8fafc; padding:9px 12px;
-  text-align:left; font-weight:600; font-size:11px;
-  color:var(--text2); border-bottom:1px solid var(--border);
-  white-space:nowrap;
-}
-tbody tr { border-bottom:1px solid #f1f5f9; transition:background .1s; }
-tbody tr:last-child { border-bottom:none; }
-tbody tr:hover { background:#f8fafc; }
-tbody td { padding:8px 12px; vertical-align:middle; }
-.mono { font-family:'JetBrains Mono',monospace; font-size:11px; }
-
-.badge {
-  display:inline-flex; align-items:center; gap:3px;
-  padding:2px 8px; border-radius:20px;
-  font-size:10px; font-weight:700; white-space:nowrap;
-}
-.badge-ok { background:var(--green-mid); color:#14532d; }
-.badge-warn { background:#fef9c3; color:#713f12; }
-.badge-danger { background:#fecaca; color:#7f1d1d; }
-.badge-blue { background:var(--blue-mid); color:#1e3a8a; }
-.badge-gray { background:#f1f5f9; color:var(--text2); }
-
-.row-warn td:first-child { border-left:3px solid var(--yellow); }
-.row-danger td:first-child { border-left:3px solid var(--red); }
-.row-ok td:first-child { border-left:3px solid var(--green); }
-.row-kis td:first-child { border-left:3px solid var(--blue); }
-
-/* ── SECTION HDR ── */
-.section-hdr {
-  display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:10px;
-}
-.section-title { font-size:13px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
-
-/* ── SETTLEMENT ── */
-.settle-table { width:100%; }
-.settle-row {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:11px 0; border-bottom:1px solid var(--border);
-  font-size:13px;
-}
-.settle-row:last-child { border-bottom:none; padding-top:14px; }
-.settle-key { color:var(--text2); }
-.settle-val { font-family:'JetBrains Mono',monospace; font-weight:600; }
-.settle-total .settle-key { font-size:15px; font-weight:700; color:var(--text); }
-.settle-total .settle-val { font-size:20px; color:var(--green); }
-.settle-minus .settle-val { color:var(--blue); }
-
-/* ── ALERT ── */
-.alert {
-  padding:12px 16px; border-radius:8px;
-  font-size:13px; margin-bottom:16px;
-  display:flex; align-items:flex-start; gap:10px;
-}
-.alert-info { background:var(--blue-light); border:1px solid var(--blue-mid); color:#1e3a8a; }
-.alert-warn { background:var(--yellow-light); border:1px solid #fde68a; color:#78350f; }
-.alert-success { background:var(--green-light); border:1px solid var(--green-mid); color:#14532d; }
-
-/* ── STEP ── */
-.steps { display:flex; gap:0; margin-bottom:24px; }
-.step {
-  flex:1; padding:14px 16px;
-  background:var(--white); border:1px solid var(--border);
-  position:relative; text-align:center;
-  font-size:12px;
-}
-.step:first-child { border-radius:10px 0 0 10px; }
-.step:last-child { border-radius:0 10px 10px 0; }
-.step:not(:last-child) { border-right:none; }
-.step.active { background:var(--blue-light); border-color:var(--blue); color:var(--blue); }
-.step.done { background:var(--green-light); border-color:var(--green); color:var(--green); }
-.step-num { font-size:18px; font-weight:800; display:block; margin-bottom:3px; }
-.step-label { font-weight:500; }
-
-/* ── DIVIDER ── */
-.divider { height:1px; background:var(--border); margin:20px 0; }
-
-/* ── PREVIEW TABLE (구글시트) ── */
-.gs-url-row { display:flex; gap:8px; margin-bottom:12px; }
-.gs-url-input {
-  flex:1; border:1px solid var(--border2); border-radius:8px;
-  padding:9px 14px; font-size:13px; color:var(--text);
-  font-family:'Pretendard',sans-serif;
-}
-.gs-url-input:focus { outline:none; border-color:var(--blue); }
-
-.hidden { display:none !important; }
-
-/* ── DAILY PREVIEW ── */
-.preview-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:12px 16px; background:#f8fafc;
-  border-bottom:1px solid var(--border);
-  font-size:12px; font-weight:600; color:var(--text2);
-}
-
-/* ── RESPONSIVE ── */
-@media(max-width:900px) {
-  .stats-row { grid-template-columns:repeat(3,1fr); }
-  .upload-grid { grid-template-columns:1fr; }
-}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-brand .icon{width:32px;height:32px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.nav-brand span{font-size:15px;font-weight:700;color:var(--text);}
+.main{padding:28px;max-width:1400px;margin:0 auto;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:20px;}
+.card-title{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.card-title .sub{font-size:12px;font-weight:400;color:var(--text3);}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.upload-zone{border:2px dashed var(--border2);border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);}
+.upload-zone:hover{border-color:var(--blue);background:var(--blue-light);}
+.upload-zone.loaded{border-color:var(--green);border-style:solid;background:var(--green-light);}
+.upload-zone input{display:none;}
+.upload-icon{font-size:28px;margin-bottom:8px;}
+.upload-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.upload-desc{font-size:12px;color:var(--text3);line-height:1.5;}
+.upload-file{font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace;margin-top:8px;}
+.form-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.form-label{font-size:13px;color:var(--text2);font-weight:500;white-space:nowrap;}
+.form-input{border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);background:var(--white);}
+.form-hint{font-size:12px;color:var(--text3);}
+.btn{border:none;border-radius:8px;cursor:pointer;font-family:'Pretendard',sans-serif;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--blue);color:#fff;padding:10px 20px;font-size:14px;}
+.btn-primary:hover{background:#1d4ed8;transform:translateY(-1px);}
+.btn-primary:disabled{background:#93c5fd;cursor:not-allowed;transform:none;}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);padding:7px 14px;font-size:13px;}
+.btn-ghost:hover{background:var(--bg);border-color:var(--blue);color:var(--blue);}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow);}
+.stat .label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.stat .value{font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+.stat .hint{font-size:11px;color:var(--text3);margin-top:3px;}
+.stat.blue .value{color:var(--blue);}.stat.green .value{color:var(--green);}.stat.orange .value{color:var(--orange);}.stat.red .value{color:var(--red);}
+.table-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.table-scroll{overflow-y:auto;max-height:460px;}
+.table-scroll::-webkit-scrollbar{width:5px;}
+.table-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead{position:sticky;top:0;z-index:2;}
+thead th{background:#f8fafc;padding:9px 12px;text-align:left;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody tr{border-bottom:1px solid #f1f5f9;transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f8fafc;}
+tbody td{padding:8px 12px;vertical-align:middle;}
+.mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
+.badge-ok{background:var(--green-mid);color:#14532d;}
+.badge-warn{background:#fef9c3;color:#713f12;}
+.badge-danger{background:#fecaca;color:#7f1d1d;}
+.badge-blue{background:var(--blue-mid);color:#1e3a8a;}
+.badge-gray{background:#f1f5f9;color:var(--text2);}
+.row-warn td:first-child{border-left:3px solid var(--yellow);}
+.row-ok td:first-child{border-left:3px solid var(--green);}
+.row-kis td:first-child{border-left:3px solid var(--blue);}
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.section-title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.settle-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.settle-row:last-child{border-bottom:none;padding-top:14px;}
+.settle-key{color:var(--text2);}
+.settle-val{font-family:'JetBrains Mono',monospace;font-weight:600;}
+.settle-total .settle-key{font-size:15px;font-weight:700;color:var(--text);}
+.settle-total .settle-val{font-size:20px;color:var(--green);}
+.settle-minus .settle-val{color:var(--blue);}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+.hidden{display:none!important;}
+@media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr);}.upload-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav class="nav">
   <div class="nav-brand">
     <div class="icon">📦</div>
-    <span>스카이티제이 용지관리</span>
-  </div>
-  <div class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('monthly')">📊 월말 정산</button>
+    <span>스카이티제이 · 월말 정산</span>
   </div>
 </nav>
 
 <div class="main">
-
-<!-- ══════════════════════════════════════
-     PAGE 1: 매일 발송
-════════════════════════════════════════ -->
-<div class="page" id="page-daily">
-
-  <div class="steps">
-    <div class="step active" id="step1"><span class="step-num">1</span><span class="step-label">월 선택</span></div>
-    <div class="step" id="step2"><span class="step-num">2</span><span class="step-label">발송 목록 확인</span></div>
-    <div class="step" id="step3"><span class="step-num">3</span><span class="step-label">에이스아이피 엑셀 생성</span></div>
-  </div>
-
-  <!-- 구글시트 직접 연동 -->
-  <div class="card">
-    <div class="card-title">📋 구글시트 자동 연동 <span class="sub">— 파일 다운로드 불필요</span></div>
-    <div class="alert alert-success" id="apiStatus">
-      🔄 구글시트 시트 목록 불러오는 중...
-    </div>
-    <div class="form-row">
-      <span class="form-label">월 선택</span>
-      <select class="form-input" id="sheetSelect" style="width:140px" onchange="onSheetSelect()">
-        <option value="">-- 로딩 중 --</option>
-      </select>
-      <span class="form-label" style="margin-left:8px">또는 직접 입력</span>
-      <input class="form-input" id="dailyMonth" placeholder="26.05" style="width:100px">
-      <button class="btn btn-primary" id="loadGsBtn" onclick="loadGoogleSheet()">
-        📥 불러오기
-      </button>
-    </div>
-  </div>
-
-  <!-- 발송 목록 미리보기 -->
-  <div class="card hidden" id="dailyPreviewCard">
-    <div class="card-title">📋 오늘 발송 목록 <span class="sub" id="dailyPreviewSub"></span></div>
-
-    <div class="stats-row" id="dailyStats" style="grid-template-columns:repeat(4,1fr)"></div>
-
-    <div class="divider"></div>
-
-    <div class="section-hdr">
-      <div class="section-title">발송 대상 목록</div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="filterDaily('all')" id="filterAll">전체</button>
-        <button class="btn btn-ghost" onclick="filterDaily('70')" id="filter70">79*70</button>
-        <button class="btn btn-ghost" onclick="filterDaily('80')" id="filter80">79*80</button>
-      </div>
-    </div>
-
-    <div class="table-wrap" style="margin-bottom:16px">
-      <div class="table-scroll" style="max-height:360px">
-        <table>
-          <thead>
-            <tr>
-              <th>No</th><th>날짜</th><th>가맹점명</th><th>전화번호</th><th>품명</th><th>수량</th><th>주소</th><th>배송메세지</th>
-            </tr>
-          </thead>
-          <tbody id="dailyTbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="alert alert-success" id="dailyReadyAlert" style="display:none">
-      ✅ 목록 확인 완료! 아래 버튼으로 에이스아이피 발송용 엑셀을 생성하세요.
-    </div>
-
-    <button class="btn btn-success btn-lg" onclick="generateAceExcel()">
-      ⬇️ 에이스아이피 발송용 엑셀 생성 (1열 제외)
-    </button>
-  </div>
-</div>
-
-
-<!-- ══════════════════════════════════════
-     PAGE 2: 월말 정산
-════════════════════════════════════════ -->
-<div class="page active" id="page-monthly">
-
-  <!-- 파일 업로드 -->
   <div class="card">
     <div class="card-title">📂 파일 업로드</div>
     <div class="upload-grid">
@@ -383,346 +115,130 @@ tbody td { padding:8px 12px; vertical-align:middle; }
         <div class="upload-file" id="fname2">클릭하여 파일 선택</div>
       </label>
     </div>
-    <div class="divider" style="margin:16px 0"></div>
+    <div class="divider"></div>
     <div class="form-row">
       <span class="form-label">정산 년월</span>
       <input class="form-input" id="monthInput" placeholder="26.04" style="width:100px">
       <span class="form-hint">파일2의 시트명과 동일 (예: 26.04)</span>
-      <button class="btn btn-primary" id="runBtn" disabled onclick="runCompare()">
-        ▶ 대조 실행
-      </button>
+      <button class="btn btn-primary" id="runBtn" disabled onclick="runCompare()">▶ 대조 실행</button>
     </div>
   </div>
 
-  <!-- 결과 -->
   <div id="results" class="hidden">
-
-    <!-- 요약 -->
     <div class="stats-row" id="summaryGrid"></div>
 
-    <!-- 불일치 -->
-    <div class="card" id="issueCard">
-      <div class="section-hdr">
-        <div class="section-title">
-          ⚠️ 불일치 항목
-          <span class="badge badge-warn" id="issueCount">0건</span>
-        </div>
-        <button class="btn btn-ghost" onclick="exportIssues()">엑셀 저장</button>
-      </div>
-      <div class="table-wrap">
-        <div class="table-scroll">
-          <table>
-            <thead><tr><th>No</th><th>상호명</th><th>품명</th><th>발송일</th><th>불일치</th><th>파일1 (에이스아이피)</th><th>파일2 (우리기록)</th></tr></thead>
-            <tbody id="issueTbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- KIS -->
-    <div class="card" id="kisCard">
-      <div class="section-hdr">
-        <div class="section-title">
-          🏦 키핑재고 (KIS) 차감 항목
-          <span class="badge badge-blue" id="kisCount">0건</span>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <div class="table-scroll" style="max-height:280px">
-          <table>
-            <thead><tr><th>No</th><th>상호명</th><th>품명</th><th>수량</th><th>키핑 메모</th><th>송장번호</th></tr></thead>
-            <tbody id="kisTbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- 전체 -->
     <div class="card">
       <div class="section-hdr">
-        <div class="section-title">
-          📋 전체 대조 목록
-          <span class="badge badge-gray" id="totalCount">0건</span>
-        </div>
-        <button class="btn btn-ghost" onclick="exportFull()">전체 엑셀 저장</button>
+        <div class="section-title">⚠️ 불일치 항목 <span class="badge badge-warn" id="issueCount">0건</span></div>
+        <button class="btn btn-ghost" onclick="exportIssues()">엑셀 저장</button>
       </div>
-      <div class="table-wrap">
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>No</th><th>발송일</th><th>상호명</th><th>품명</th>
-                <th>단가</th><th>합계(VAT)</th>
-                <th>수량 일치</th><th>KIS</th><th>송장번호</th><th>상태</th>
-              </tr>
-            </thead>
-            <tbody id="fullTbody"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="table-wrap"><div class="table-scroll">
+        <table>
+          <thead><tr><th>No</th><th>상호명</th><th>품명</th><th>발송일</th><th>불일치</th><th>파일1 (에이스아이피)</th><th>파일2 (우리기록)</th></tr></thead>
+          <tbody id="issueTbody"></tbody>
+        </table>
+      </div></div>
     </div>
 
-    <!-- 정산 -->
+    <div class="card">
+      <div class="section-hdr">
+        <div class="section-title">🏦 키핑재고 (KIS) 차감 항목 <span class="badge badge-blue" id="kisCount">0건</span></div>
+      </div>
+      <div class="table-wrap"><div class="table-scroll" style="max-height:280px">
+        <table>
+          <thead><tr><th>No</th><th>상호명</th><th>품명</th><th>수량</th><th>키핑 메모</th><th>송장번호</th></tr></thead>
+          <tbody id="kisTbody"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-hdr">
+        <div class="section-title">📋 전체 대조 목록 <span class="badge badge-gray" id="totalCount">0건</span></div>
+        <button class="btn btn-ghost" onclick="exportFull()">전체 엑셀 저장</button>
+      </div>
+      <div class="table-wrap"><div class="table-scroll">
+        <table>
+          <thead><tr><th>No</th><th>발송일</th><th>상호명</th><th>품명</th><th>단가</th><th>합계(VAT)</th><th>수량일치</th><th>KIS</th><th>송장번호</th><th>상태</th></tr></thead>
+          <tbody id="fullTbody"></tbody>
+        </table>
+      </div></div>
+    </div>
+
     <div class="card">
       <div class="card-title">💰 에이스아이피 정산 요약</div>
       <div id="settlementRows"></div>
     </div>
-
   </div>
 </div>
 
-</div><!-- /main -->
-
 <script>
-// ═══════════════════════════════════
-// GLOBAL STATE
-// ═══════════════════════════════════
-const API_URL = 'https://script.google.com/macros/s/AKfycbzsfFrA5ionecDsj67N9ZO7_Ixzb3vSZrXqxcAfkElfcmiFYVdECmf_1v9HGZwoCyLBMQ/exec';
-let gsData = null, data1 = null, data2 = null;
-let compareResult = null, dailyRows = null;
+let data1=null, data2=null, compareResult=null;
 
-// ═══════════════════════════════════
-// TAB SWITCH
-// ═══════════════════════════════════
-function switchTab(name) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-  document.getElementById('page-'+name).classList.add('active');
-}
+document.getElementById('file1').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  readXlsx(f, wb=>{ data1=wb; document.getElementById('fname1').textContent=f.name; document.getElementById('card1').classList.add('loaded'); document.getElementById('icon1').textContent='✅'; checkRunReady(); });
+});
+document.getElementById('file2').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  readXlsx(f, wb=>{ data2=wb; document.getElementById('fname2').textContent=f.name; document.getElementById('card2').classList.add('loaded'); document.getElementById('icon2').textContent='✅'; checkRunReady(); });
+});
 
-// ═══════════════════════════════════
-// FILE INPUTS (월말 정산용)
-// ═══════════════════════════════════
-document.getElementById('file1').addEventListener('change', e => {
-  const file = e.target.files[0]; if (!file) return;
-  readXlsx(file, wb => {
-    data1 = wb;
-    document.getElementById('fname1').textContent = file.name;
-    document.getElementById('card1').classList.add('loaded');
-    document.getElementById('icon1').textContent = '✅';
-    checkRunReady();
+function readXlsx(file,cb){ const r=new FileReader(); r.onload=ev=>cb(XLSX.read(ev.target.result,{type:'array'})); r.readAsArrayBuffer(file); }
+function checkRunReady(){ document.getElementById('runBtn').disabled=!(data1&&data2); }
+
+function runCompare(){
+  const month=document.getElementById('monthInput').value.trim()||'26.04';
+  const rows1=parseFile1(data1);
+  const rows2All=parseFile2(data2,month);
+  const rows2NonKis=rows2All.filter(r=>!r.키핑);
+  const kisRows=rows2All.filter(r=>!!r.키핑);
+  const keyOf=r=>norm(r.상호)+'||'+norm(r.품명);
+  const map1=new Map();
+  rows1.forEach(r=>{ const k=keyOf(r); if(!map1.has(k)) map1.set(k,[]); map1.get(k).push(r); });
+  const results=[], used1=new Set(); let no=0;
+
+  rows2NonKis.forEach(r2=>{
+    no++;
+    const k=keyOf(r2), candidates=map1.get(k)||[];
+    const r1=candidates.find(c=>!used1.has(c))||null;
+    if(r1) used1.add(r1);
+    const issues=[];
+    const nameMatch=r1?norm(r1.상호)===norm(r2.상호):false;
+    const qtyMatch=r1?(r1.수량||1)===(r2.수량||1):false;
+    const addrMatch=r1?normAddr(r1.주소)===normAddr(r2.주소):false;
+    if(!r1) issues.push('파일1에 없음');
+    else { if(!nameMatch) issues.push('상호'); if(!qtyMatch) issues.push('수량'); }
+    results.push({no,r1:r1||{},r2,nameMatch,qtyMatch,addrMatch,isKis:false,issues,status:!r1?'warn':(nameMatch&&qtyMatch?'ok':'warn')});
   });
-});
-document.getElementById('file2').addEventListener('change', e => {
-  const file = e.target.files[0]; if (!file) return;
-  readXlsx(file, wb => {
-    data2 = wb;
-    document.getElementById('fname2').textContent = file.name;
-    document.getElementById('card2').classList.add('loaded');
-    document.getElementById('icon2').textContent = '✅';
-    checkRunReady();
-  });
-});
 
-function readXlsx(file, cb) {
-  const reader = new FileReader();
-  reader.onload = ev => cb(XLSX.read(ev.target.result, {type:'array'}));
-  reader.readAsArrayBuffer(file);
-}
-function checkRunReady() {
-  document.getElementById('runBtn').disabled = !(data1 && data2);
+  rows1.forEach(r1=>{ if(used1.has(r1)) return; no++; results.push({no,r1,r2:{},nameMatch:false,qtyMatch:false,addrMatch:false,isKis:false,issues:['파일2에 없음'],status:'warn'}); });
+  kisRows.forEach(r2=>{ no++; results.push({no,r1:{},r2,nameMatch:false,qtyMatch:false,addrMatch:false,isKis:true,issues:[],status:'kis'}); });
+
+  compareResult=results;
+  renderMonthly(results,rows1,kisRows,rows2NonKis.length,rows1.length,kisRows.length);
 }
 
-// ═══════════════════════════════════
-// DAILY — 구글시트 API 직접 연동
-// ═══════════════════════════════════
-
-// 페이지 로드 시 시트 목록 자동 불러오기
-window.addEventListener('load', () => {
-  fetch(API_URL + '?action=getSheets')
-    .then(r => r.json())
-    .then(data => {
-      const sel = document.getElementById('sheetSelect');
-      if (data.sheets && data.sheets.length) {
-        sel.innerHTML = data.sheets.map(s =>
-          `<option value="${s}">${s}</option>`
-        ).join('');
-        // 첫 번째 시트를 dailyMonth에도 세팅
-        document.getElementById('dailyMonth').value = data.sheets[0];
-        document.getElementById('apiStatus').textContent = '✅ 구글시트 연동 완료 — 월을 선택하고 불러오기를 누르세요.';
-        document.getElementById('apiStatus').className = 'alert alert-success';
-      }
-    })
-    .catch(() => {
-      document.getElementById('apiStatus').textContent = '⚠️ 구글시트 연결 실패. 잠시 후 다시 시도해주세요.';
-      document.getElementById('apiStatus').className = 'alert alert-warn';
-    });
-});
-
-function onSheetSelect() {
-  const sel = document.getElementById('sheetSelect').value;
-  if (sel) document.getElementById('dailyMonth').value = sel;
-}
-
-let rawApiData = null; // API에서 받은 원본 데이터 저장
-
-function loadGoogleSheet() {
-  const month = document.getElementById('dailyMonth').value.trim() ||
-                document.getElementById('sheetSelect').value || '26.05';
-  document.getElementById('apiStatus').textContent = '🔄 데이터 불러오는 중...';
-  document.getElementById('apiStatus').className = 'alert alert-info';
-  document.getElementById('loadGsBtn').disabled = true;
-
-  fetch(`${API_URL}?action=getData&month=${encodeURIComponent(month)}`)
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) throw new Error(data.error);
-      rawApiData = data;
-      // 노란색(완료), 빨간색(입금대기) 제외 — 흰색만 발송 대상
-      const filtered = data.rows.filter(r => {
-        const bg = (r.색상||'').toLowerCase().trim();
-        if (bg === '#ffff00') return false; // 발송완료
-        if (isRed(bg)) return false;        // 입금대기
-        return true;
-      });
-      dailyRows = filtered;
-      const excluded = data.total - filtered.length;
-      document.getElementById('apiStatus').textContent = `✅ ${data.sheetName} — 발송 대상 ${filtered.length}건 (완료/보류 ${excluded}건 제외)`;
-      document.getElementById('apiStatus').className = 'alert alert-success';
-      document.getElementById('loadGsBtn').disabled = false;
-      renderDailyPreview(filtered, data.sheetName);
-    })
-    .catch(err => {
-      document.getElementById('apiStatus').textContent = '❌ 불러오기 실패: ' + err.message;
-      document.getElementById('apiStatus').className = 'alert alert-warn';
-      document.getElementById('loadGsBtn').disabled = false;
-    });
-}
-
-function renderDailyPreview(rows, month) {
-  const card = document.getElementById('dailyPreviewCard');
-  card.classList.remove('hidden');
-  setStep(2);
-
-  const cnt70 = rows.filter(r=>r.품명.includes('70')).length;
-  const cnt80 = rows.filter(r=>r.품명.includes('80')).length;
-  const cntOther = rows.length - cnt70 - cnt80;
-
-  document.getElementById('dailyPreviewSub').textContent = `${month} · 총 ${rows.length}건`;
-  document.getElementById('dailyStats').innerHTML = `
-    <div class="stat blue"><div class="label">총 건수</div><div class="value">${rows.length}</div><div class="hint">건</div></div>
-    <div class="stat"><div class="label">79*70 / 1BOX</div><div class="value">${cnt70}</div><div class="hint">건</div></div>
-    <div class="stat"><div class="label">79*80 / 1BOX</div><div class="value">${cnt80}</div><div class="hint">건</div></div>
-    <div class="stat green"><div class="label">기타</div><div class="value">${cntOther}</div><div class="hint">건</div></div>
-  `;
-  renderDailyTable(rows);
-  document.getElementById('dailyReadyAlert').style.display = 'flex';
-}
-
-function renderDailyTable(rows) {
-  document.getElementById('dailyTbody').innerHTML = rows.map((r,i) => `
-    <tr>
-      <td class="mono">${i+1}</td>
-      <td class="mono">${r.날짜}</td>
-      <td style="font-weight:500">${r.가맹점}</td>
-      <td class="mono">${r.전화}</td>
-      <td><span class="badge ${r.품명.includes('80')?'badge-blue':'badge-gray'}">${r.품명}</span></td>
-      <td class="mono" style="text-align:center">${r.수량}</td>
-      <td style="font-size:11px;color:var(--text2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.주소}">${r.주소}</td>
-      <td style="font-size:11px;color:var(--text3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.메세지}</td>
-    </tr>
-  `).join('');
-}
-
-function filterDaily(type) {
-  if (!dailyRows) return;
-  const filtered = type==='all' ? dailyRows :
-    dailyRows.filter(r => r.품명.includes(type));
-  renderDailyTable(filtered);
-}
-
-// ═══════════════════════════════════
-// DAILY — 에이스아이피용 엑셀 생성 (API 데이터 기반)
-// ═══════════════════════════════════
-function generateAceExcel() {
-  if (!dailyRows || !dailyRows.length) return;
-  const month = document.getElementById('dailyMonth').value.trim() || '26.05';
-
-  // 헤더 (1열 제외)
-  const headers = ['2열','수량','받는분성명','받는분번호','받는분주소','배송메세지','보내는분','보내는분번호','보내는분주소','송장번호'];
-  const dataRows = dailyRows.map(r => [
-    r.품명, r.수량, r.가맹점, r.전화, r.주소, r.메세지,
-    r.보내는분||'', r.보내는분번호||'', r.보내는분주소||'', r.송장번호||''
-  ]);
-
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, month);
-
-  const today = new Date();
-  const dateStr = `${today.getFullYear().toString().slice(2)}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
-  XLSX.writeFile(wb, `에이스아이피_발송요청_${dateStr}.xlsx`);
-
-  setStep(3);
-  document.getElementById('dailyReadyAlert').style.display = 'none';
-
-  const alertEl = document.createElement('div');
-  alertEl.className = 'alert alert-success';
-  alertEl.innerHTML = `✅ <strong>에이스아이피_발송요청_${dateStr}.xlsx</strong> 생성 완료! 이 파일을 에이스아이피에 메일로 발송하세요.`;
-  document.getElementById('dailyPreviewCard').appendChild(alertEl);
-}
-
-function setStep(n) {
-  for(let i=1;i<=3;i++){
-    const el = document.getElementById('step'+i);
-    el.className = 'step' + (i<n?' done':i===n?' active':'');
-  }
-}
-
-// ═══════════════════════════════════
-// MONTHLY — 대조 실행
-// 핵심: 우리 수량 vs 에이스아이피 수량 일치 여부만 확인
-// 정산: 전체 수량 - KIS 수량 = 지불 금액
-// ═══════════════════════════════════
-function runCompare() {
-  const month = document.getElementById('monthInput').value.trim() || '26.04';
-  const rows1 = parseFile1(data1);   // 에이스아이피 파일
-  const rows2 = parseFile2(data2, month); // 우리 택배양식
-
-  // 수량 대조: 우리가 보낸 총 수량 vs 에이스아이피 총 수량
-  const ourTotal  = rows2.filter(r=>!r.키핑).length;   // KIS 제외한 우리 발송 수량
-  const aceTotal  = rows1.length;                        // 에이스아이피 수량
-  const kisRows   = rows2.filter(r=>!!r.키핑);           // KIS 키핑재고 행
-  const kisQty    = kisRows.length;
-
-  // 상호별 수량 불일치 찾기
-  const map1 = {}, map2 = {};
-  rows1.forEach(r => { const k=norm(r.상호); map1[k]=(map1[k]||0)+1; });
-  rows2.filter(r=>!r.키핑).forEach(r => { const k=norm(r.상호); map2[k]=(map2[k]||0)+1; });
-
-  // 전체 row-by-row 대조 (상호+수량 기준)
-  const results = [];
-  const n = Math.max(rows1.length, rows2.length);
-  for (let i=0; i<n; i++) {
-    const r1=rows1[i]||{}, r2=rows2[i]||{};
-    const nameMatch = norm(r1.상호)===norm(r2.상호);
-    const qtyMatch  = (r1.수량||1)===(r2.수량||1);
-    const isKis = !!r2.키핑;
-    // 불일치 = 상호 다르거나 수량 다를 때
-    const mismatch = !isKis && (!nameMatch || !qtyMatch);
-    results.push({no:i+1, r1, r2, nameMatch, qtyMatch, isKis,
-                  status: isKis?'kis': mismatch?'warn':'ok'});
-  }
-
-  compareResult = results;
-  renderMonthly(results, rows1, rows2, kisRows, ourTotal, aceTotal, kisQty);
-}
-
-function parseFile1(wb) {
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-  let hdr = raw.findIndex(r=>r.some(c=>String(c).trim()==='품명'));
+function parseFile1(wb){
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  // 헤더 행 찾기: '품명' 또는 '상호' 포함하는 행
+  let hdr=raw.findIndex(r=>r.some(c=>String(c).trim()==='품명'||String(c).trim()==='상호'));
   if(hdr<0) hdr=2;
-  const headers = raw[hdr].map(c=>String(c).trim());
-  const col = n => headers.findIndex(h=>h.includes(n));
-  const cP=col('품명'),cQ=col('수량'),cPr=col('단가'),cT=col('합계'),
-        cN=col('상호'),cPh=col('전화'),cA=col('주소'),cD=col('발송일');
+  const headers=raw[hdr].map(c=>String(c).trim());
+  // 정확 일치 우선, 없으면 부분 일치
+  const col=n=>{
+    const exact=headers.findIndex(h=>h===n);
+    if(exact>=0) return exact;
+    return headers.findIndex(h=>h.includes(n));
+  };
+  const cP=col('품명'),cQ=col('수량'),cPr=col('단가'),cT=col('합계금액'),
+        cN=col('상호'),cPh=col('전화번호'),cA=col('주소'),cD=col('발송일');
   const rows=[];
   for(let i=hdr+1;i<raw.length;i++){
-    const r=raw[i];
-    const name=String(r[cN]||'').trim();
-    if(!name||name==='0') continue;
+    const r=raw[i], name=String(r[cN]||'').trim();
+    if(!name||name==='0'||name==='nan') continue;
+    if(!r[cP]&&!r[cQ]) continue;
     rows.push({상호:name,품명:String(r[cP]||'').trim(),수량:Number(r[cQ])||1,
       단가:Number(r[cPr])||0,합계:Number(r[cT])||0,
       전화:String(r[cPh]||'').trim(),주소:String(r[cA]||'').trim(),발송일:fmtDate(r[cD])});
@@ -730,164 +246,108 @@ function parseFile1(wb) {
   return rows;
 }
 
-function parseFile2(wb, month) {
-  const sheetNames = wb.SheetNames;
-  const target = sheetNames.find(s=>s.trim()===month)||sheetNames[0];
-  const ws = wb.Sheets[target];
-  const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-  const headers = raw[0].map(c=>String(c).trim());
-  const col = n => headers.findIndex(h=>h.includes(n));
-  const cN=col('받는분성명'),cP=col('2열'),cQ=col('수량'),
-        cPh=col('받는분번호'),cA=col('받는분주소'),
-        cT=col('송장번호'),cK=col('정기분전표');
+function parseFile2(wb,month){
+  const target=wb.SheetNames.find(s=>s.trim()===month)||wb.SheetNames[0];
+  const ws=wb.Sheets[target];
+  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  const headers=raw[0].map(c=>String(c).trim());
+  const col=n=>headers.findIndex(h=>h.includes(n));
+  const cN=col('받는분성명'),cP=col('2열'),cQ=col('수량'),cPh=col('받는분번호'),cA=col('받는분주소'),cT=col('송장번호'),cK=col('정기분전표');
   const rows=[];
   for(let i=1;i<raw.length;i++){
-    const r=raw[i];
-    const name=String(r[cN]||'').trim();
+    const r=raw[i], name=String(r[cN]||'').trim();
     if(!name) continue;
-    rows.push({상호:name,품명:String(r[cP]||'').trim(),수량:Number(r[cQ])||1,
-      전화:String(r[cPh]||'').trim(),주소:String(r[cA]||'').trim(),
-      송장번호:String(r[cT]||'').trim(),키핑:cK>=0?String(r[cK]||'').trim():''});
+    rows.push({상호:name,품명:String(r[cP]||'').trim(),수량:Number(r[cQ])||1,전화:String(r[cPh]||'').trim(),주소:String(r[cA]||'').trim(),송장번호:String(r[cT]||'').trim(),키핑:cK>=0?String(r[cK]||'').trim():''});
   }
   return rows;
 }
 
-function renderMonthly(results, rows1, rows2, kisRows, ourTotal, aceTotal, kisQty) {
+function renderMonthly(results,rows1,kisRows,ourTotal,aceTotal,kisQty){
   document.getElementById('results').classList.remove('hidden');
-  const warns = results.filter(r=>r.status==='warn');
-  const totalVat = rows1.reduce((s,r)=>s+r.합계,0);
-  const kisAmt   = kisRows.reduce((s,r)=>s+(r.r1.합계||0),0);
-  const billTotal = ourTotal; // 우리가 보낸 수량 기준
-  const qtyMatch  = ourTotal === aceTotal;
+  const warns=results.filter(r=>r.status==='warn');
+  const kisKeySet=new Set(kisRows.map(r=>norm(r.상호)+'||'+norm(r.품명)));
+  let totalVat=0, kisAmt=0;
+  rows1.forEach(r=>{ totalVat+=(r.합계||0); if(kisKeySet.has(norm(r.상호)+'||'+norm(r.품명))) kisAmt+=(r.합계||0); });
+  const qtyMatch=ourTotal===aceTotal;
 
-  // ── 수량 대조 요약 ──
-  document.getElementById('summaryGrid').innerHTML = `
+  document.getElementById('summaryGrid').innerHTML=`
     <div class="stat blue"><div class="label">우리 발송 수량</div><div class="value">${ourTotal}</div><div class="hint">건 (KIS 제외)</div></div>
     <div class="stat blue"><div class="label">에이스아이피 수량</div><div class="value">${aceTotal}</div><div class="hint">건</div></div>
     <div class="stat ${qtyMatch?'green':'red'}"><div class="label">수량 일치</div><div class="value">${qtyMatch?'✅':'❌'}</div><div class="hint">${qtyMatch?'일치':'차이 '+(ourTotal-aceTotal)+'건'}</div></div>
     <div class="stat"><div class="label">KIS 차감</div><div class="value">${kisQty}</div><div class="hint">건</div></div>
-    <div class="stat orange"><div class="label">정산 건수</div><div class="value">${billTotal}</div><div class="hint">건</div></div>
-  `;
-  document.getElementById('issueCount').textContent = warns.length+'건';
-  document.getElementById('kisCount').textContent = kisRows.length+'건';
-  document.getElementById('totalCount').textContent = results.length+'건';
+    <div class="stat orange"><div class="label">정산 건수</div><div class="value">${ourTotal}</div><div class="hint">건</div></div>`;
+  document.getElementById('issueCount').textContent=warns.length+'건';
+  document.getElementById('kisCount').textContent=kisRows.length+'건';
+  document.getElementById('totalCount').textContent=results.length+'건';
 
-  // ── 불일치 (상호명 또는 수량 다른 것) ──
-  document.getElementById('issueTbody').innerHTML = warns.length===0
-    ? '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">✅ 수량 일치 — 불일치 항목 없음</td></tr>'
-    : warns.map(r=>`<tr class="row-warn">
-        <td class="mono">${r.no}</td>
-        <td style="font-weight:500">${r.r1.상호||r.r2.상호||''}</td>
-        <td>${r.r1.품명||r.r2.품명||''}</td>
-        <td class="mono">${r.r1.발송일||''}</td>
-        <td>${!r.nameMatch?'<span class="badge badge-warn">상호</span>':''}${!r.qtyMatch?'<span class="badge badge-danger">수량</span>':''}</td>
-        <td style="font-size:11px;color:var(--text2)">상호: ${r.r1.상호||'-'} / 수량: ${r.r1.수량||'-'}</td>
-        <td style="font-size:11px;color:var(--red)">상호: ${r.r2.상호||'-'} / 수량: ${r.r2.수량||'-'}</td>
-      </tr>`).join('');
+  document.getElementById('issueTbody').innerHTML=warns.length===0
+    ?'<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">✅ 수량 일치 — 불일치 항목 없음</td></tr>'
+    :warns.map(r=>`<tr class="row-warn">
+      <td class="mono">${r.no}</td><td style="font-weight:500">${r.r1.상호||r.r2.상호||''}</td>
+      <td>${r.r1.품명||r.r2.품명||''}</td><td class="mono">${r.r1.발송일||''}</td>
+      <td>${(r.issues||[]).map(t=>`<span class="badge badge-warn">${t}</span>`).join(' ')}</td>
+      <td style="font-size:11px;color:var(--text2)">상호: ${r.r1.상호||'-'} / 수량: ${r.r1.수량||'-'}</td>
+      <td style="font-size:11px;color:var(--red)">상호: ${r.r2.상호||'-'} / 수량: ${r.r2.수량||'-'}</td>
+    </tr>`).join('');
 
-  // ── KIS ──
-  document.getElementById('kisTbody').innerHTML = kisRows.length===0
-    ? '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">키핑재고 항목 없음</td></tr>'
-    : kisRows.map((r,i)=>`<tr class="row-kis">
-        <td class="mono">${i+1}</td>
-        <td>${r.r2?r.r2.상호:r.상호||''}</td>
-        <td>${r.r2?r.r2.품명:r.품명||''}</td>
-        <td class="mono" style="text-align:center">${r.r2?r.r2.수량:r.수량||1}</td>
-        <td><span class="badge badge-blue">${r.r2?r.r2.키핑:r.키핑||''}</span></td>
-        <td class="mono">${r.r2?r.r2.송장번호:r.송장번호||''}</td>
-      </tr>`).join('');
+  document.getElementById('kisTbody').innerHTML=kisRows.length===0
+    ?'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">키핑재고 항목 없음</td></tr>'
+    :kisRows.map((r,i)=>`<tr class="row-kis">
+      <td class="mono">${i+1}</td><td>${r.상호||''}</td><td>${r.품명||''}</td>
+      <td class="mono" style="text-align:center">${r.수량||1}</td>
+      <td><span class="badge badge-blue">${r.키핑||''}</span></td><td class="mono">${r.송장번호||''}</td>
+    </tr>`).join('');
 
-  // ── 전체 대조 ──
-  document.getElementById('fullTbody').innerHTML = results.map(r=>{
-    const cls = r.status==='warn'?'row-warn':r.status==='kis'?'row-kis':'row-ok';
-    const qBadge = r.isKis?'':r.qtyMatch?'<span class="badge badge-ok">✓</span>':'<span class="badge badge-danger">✗</span>';
+  document.getElementById('fullTbody').innerHTML=results.map(r=>{
+    const cls=r.status==='warn'?'row-warn':r.status==='kis'?'row-kis':'row-ok';
+    const pum=r.r1.품명||r.r2.품명||'';
+    const qBadge=r.isKis?'':r.qtyMatch?'<span class="badge badge-ok">✓</span>':'<span class="badge badge-danger">✗</span>';
     return `<tr class="${cls}">
-      <td class="mono">${r.no}</td>
-      <td class="mono">${r.r1.발송일||''}</td>
+      <td class="mono">${r.no}</td><td class="mono">${r.r1.발송일||''}</td>
       <td style="font-weight:500;font-size:12px">${r.r1.상호||r.r2.상호||''}</td>
-      <td><span class="badge ${r.r1.품명&&r.r1.품명.includes('80')?'badge-blue':'badge-gray'}">${r.r1.품명||r.r2.품명||''}</span></td>
+      <td><span class="badge ${String(pum).includes('80')?'badge-blue':'badge-gray'}">${pum}</span></td>
       <td class="mono">${(r.r1.단가||0).toLocaleString()}</td>
       <td class="mono">${(r.r1.합계||0).toLocaleString()}</td>
       <td style="text-align:center">${qBadge}</td>
       <td>${r.r2&&r.r2.키핑?'<span class="badge badge-blue">KIS</span>':''}</td>
-      <td class="mono" style="font-size:10px">${r.r2?r.r2.송장번호||'':''}</td>
+      <td class="mono" style="font-size:10px">${(r.r2&&r.r2.송장번호)||''}</td>
       <td>${r.status==='warn'?'<span class="badge badge-warn">불일치</span>':r.status==='kis'?'<span class="badge badge-blue">KIS차감</span>':'<span class="badge badge-ok">정상</span>'}</td>
     </tr>`;
   }).join('');
 
-  // ── 정산: 우리 수량 기준, KIS 차감 ──
   const prod={};
-  rows1.forEach(r=>{
-    if(!prod[r.품명]) prod[r.품명]={qty:0,total:0};
-    prod[r.품명].qty++; prod[r.품명].total+=r.합계;
-  });
-  const prodRows = Object.entries(prod).map(([k,v])=>`
-    <div class="settle-row">
-      <span class="settle-key">${k} (${v.qty}건)</span>
-      <span class="settle-val">${v.total.toLocaleString()}원</span>
-    </div>`).join('');
-
-  document.getElementById('settlementRows').innerHTML = prodRows + `
-    <div class="settle-row settle-minus">
-      <span class="settle-key">🏦 KIS 키핑재고 차감 (${kisQty}건)</span>
-      <span class="settle-val" style="color:var(--blue)">- ${kisAmt.toLocaleString()}원</span>
-    </div>
-    <div class="settle-row settle-total" style="border-top:2px solid var(--border);margin-top:4px">
-      <span class="settle-key">✅ 에이스아이피 최종 정산 금액</span>
-      <span class="settle-val" style="font-size:22px;color:var(--green)">${(totalVat-kisAmt).toLocaleString()}원</span>
-    </div>`;
+  rows1.forEach(r=>{ if(!prod[r.품명]) prod[r.품명]={qty:0,total:0}; prod[r.품명].qty++; prod[r.품명].total+=(r.합계||0); });
+  document.getElementById('settlementRows').innerHTML=
+    Object.entries(prod).map(([k,v])=>`<div class="settle-row"><span class="settle-key">${k} (${v.qty}건)</span><span class="settle-val">${v.total.toLocaleString()}원</span></div>`).join('')+
+    `<div class="settle-row settle-minus"><span class="settle-key">🏦 KIS 키핑재고 차감 (${kisQty}건)</span><span class="settle-val" style="color:var(--blue)">- ${kisAmt.toLocaleString()}원</span></div>
+    <div class="settle-row settle-total" style="border-top:2px solid var(--border);margin-top:4px"><span class="settle-key">✅ 에이스아이피 최종 정산 금액</span><span class="settle-val" style="font-size:22px;color:var(--green)">${(totalVat-kisAmt).toLocaleString()}원</span></div>`;
 }
 
-// ═══════════════════════════════════
-// UTILS
-// ═══════════════════════════════════
-function isRed(hex) {
-  if (!hex || hex === '#ffffff' || hex === 'white') return false;
-  const h = hex.replace('#','');
-  if (h.length !== 6) return false;
-  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
-  return r > 180 && g < 120 && b < 120;
-}
+function toRgb(hex){ if(!hex) return null; let h=String(hex).trim().toLowerCase().replace('#',''); if(h==='white'||h==='ffffff'||h==='fff') return [255,255,255]; if(h.length===3) h=h.split('').map(c=>c+c).join(''); if(h.length!==6) return null; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); if(isNaN(r)||isNaN(g)||isNaN(b)) return null; return [r,g,b]; }
 function norm(s){ return String(s||'').replace(/\s+/g,'').toLowerCase(); }
 function normAddr(s){ return String(s||'').replace(/\s+/g,'').replace(/[,\-()]/g,''); }
 function fmtDate(v){
-  if(!v) return '';
-  if(typeof v==='number'){
-    const d=new Date(Math.round((v-25569)*86400*1000));
-    return d.toISOString().slice(0,10);
-  }
-  return String(v).replace('T00:00:00.000Z','').slice(0,10);
+  if(v===null||v===undefined||v==='') return '';
+  if(typeof v==='number'){ const d=new Date(Math.round((v-25569)*86400*1000)); if(isNaN(d.getTime())) return String(v); return d.toISOString().slice(0,10); }
+  let s=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  const m=s.match(/^(\d{2,4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+  if(m){ let y=m[1]; if(y.length===2) y='20'+y; return `${y}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`; }
+  return s.replace('T00:00:00.000Z','').slice(0,10);
 }
-
 function exportIssues(){
   if(!compareResult) return;
-  const month = document.getElementById('monthInput').value.trim()||'';
-  const data = compareResult.filter(r=>r.status==='warn').map(r=>({
-    'No':r.no,'상호명':r.r1.상호||r.r2.상호,'품명':r.r1.품명,
-    '발송일':r.r1.발송일,'불일치항목':r.issues.join(', '),
-    '파일1_주소':r.r1.주소,'파일2_주소':r.r2.주소,
-  }));
-  const ws=XLSX.utils.json_to_sheet(data);
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'불일치');
-  XLSX.writeFile(wb,`불일치_${month}.xlsx`);
+  const month=document.getElementById('monthInput').value.trim()||'';
+  const data=compareResult.filter(r=>r.status==='warn').map(r=>({'No':r.no,'상호명':r.r1.상호||r.r2.상호||'','품명':r.r1.품명||r.r2.품명||'','발송일':r.r1.발송일||'','불일치항목':(r.issues||[]).join(', '),'파일1_상호':r.r1.상호||'','파일1_수량':r.r1.수량||'','파일2_상호':r.r2.상호||'','파일2_수량':r.r2.수량||''}));
+  const ws=XLSX.utils.json_to_sheet(data), wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'불일치'); XLSX.writeFile(wb,`불일치_${month}.xlsx`);
 }
-
 function exportFull(){
   if(!compareResult) return;
-  const month = document.getElementById('monthInput').value.trim()||'';
-  const data = compareResult.map(r=>({
-    'No':r.no,'발송일':r.r1.발송일||'','상호명':r.r1.상호||r.r2.상호,
-    '품명':r.r1.품명||r.r2.품명,'단가(VAT별도)':r.r1.단가||0,
-    '합계(VAT포함)':r.r1.합계||0,'파일1_주소':r.r1.주소||'',
-    '파일2_주소':r.r2.주소||'','주소일치':r.addrMatch?'O':'X',
-    '키핑재고':r.r2.키핑||'','송장번호':r.r2.송장번호||'',
-    '상태':r.status==='warn'?'불일치':r.status==='kis'?'KIS차감':'정상',
-  }));
-  const ws=XLSX.utils.json_to_sheet(data);
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'전체대조');
-  XLSX.writeFile(wb,`정산대조_${month}.xlsx`);
+  const month=document.getElementById('monthInput').value.trim()||'';
+  const data=compareResult.map(r=>({'No':r.no,'발송일':r.r1.발송일||'','상호명':r.r1.상호||r.r2.상호||'','품명':r.r1.품명||r.r2.품명||'','단가(VAT별도)':r.r1.단가||0,'합계(VAT포함)':r.r1.합계||0,'키핑재고':(r.r2&&r.r2.키핑)||'','송장번호':(r.r2&&r.r2.송장번호)||'','상태':r.status==='warn'?'불일치':r.status==='kis'?'KIS차감':'정상'}));
+  const ws=XLSX.utils.json_to_sheet(data), wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'전체대조'); XLSX.writeFile(wb,`정산대조_${month}.xlsx`);
 }
 </script>
 </body>
