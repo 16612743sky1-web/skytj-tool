@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1e293b">
+<title>클로드 사용량 대시보드</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+:root{
+  --bg:#f4f6f9;--white:#fff;--border:#e2e8f0;--border2:#cbd5e1;
+  --text:#1e293b;--text2:#475569;--text3:#94a3b8;
+  --blue:#2563eb;--blue-light:#eff6ff;
+  --green:#16a34a;--green-light:#f0fdf4;
+  --amber:#d97706;--amber-light:#fffbeb;
+  --red:#dc2626;--red-light:#fef2f2;
+  --track:#e8edf3;
+  --shadow:0 1px 3px rgba(0,0,0,.08);--radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{font-size:16px;}
+body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px;}
+.hdr{background:var(--white);border-bottom:1px solid var(--border);padding:14px 16px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;}
+.hdr-brand{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800;}
+.hdr-brand .icon{width:30px;height:30px;background:linear-gradient(135deg,#c2410c,#7c2d12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.plan-badge{font-size:11px;font-weight:800;color:#7c2d12;background:#fde4d3;border:1px solid #fbceb0;padding:4px 10px;border-radius:20px;}
+.main{padding:14px;max-width:640px;margin:0 auto;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:12px;}
+.card-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.card-title .sub{font-size:11px;font-weight:500;color:var(--text3);}
+
+/* hero session ring */
+.hero{display:flex;align-items:center;gap:18px;}
+.ring-wrap{position:relative;flex-shrink:0;}
+.ring-wrap.big{width:132px;height:132px;}
+.ring-wrap .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring-wrap .pct{font-size:30px;font-weight:800;line-height:1;}
+.ring-wrap.big .pct{font-size:34px;}
+.ring-wrap .pct small{font-size:15px;font-weight:700;}
+.ring-wrap .cap{font-size:10px;font-weight:700;color:var(--text3);margin-top:3px;}
+.hero-info{flex:1;min-width:0;}
+.hero-info .lb{font-size:12px;font-weight:700;color:var(--text3);}
+.hero-info .nm{font-size:19px;font-weight:800;margin-top:2px;}
+.hero-info .reset{margin-top:10px;font-size:12px;color:var(--text2);}
+.hero-info .reset b{font-weight:800;color:var(--text);}
+.hero-info .reset.over b{color:var(--red);}
+.state-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;margin-top:8px;}
+.state-good{background:var(--green-light);color:#166534;}
+.state-warn{background:var(--amber-light);color:#92400e;}
+.state-crit{background:var(--red-light);color:#991b1b;}
+
+/* weekly grid */
+.wk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.wk-item{border:1px solid var(--border);border-radius:12px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.wk-item .nm{font-size:12.5px;font-weight:800;margin-bottom:10px;}
+.wk-item .reset{font-size:10.5px;color:var(--text3);margin-top:9px;line-height:1.5;}
+.wk-item .reset b{color:var(--text2);font-weight:700;}
+
+/* legend */
+.legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:4px;}
+.legend span{font-size:11px;color:var(--text2);font-weight:600;display:inline-flex;align-items:center;gap:5px;}
+.legend i{width:9px;height:9px;border-radius:3px;display:inline-block;}
+
+/* forms */
+label.f{display:block;font-size:12px;font-weight:600;color:var(--text2);margin:12px 0 5px;}
+label.f:first-child{margin-top:0;}
+input.f,select.f{width:100%;border:1px solid var(--border2);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:16px;color:var(--text);background:var(--white);}
+input.f:focus,select.f:focus{outline:2px solid var(--blue);border-color:var(--blue);}
+.frow{display:flex;gap:8px;}
+.frow>div{flex:1;}
+.fieldset{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;}
+.fieldset .fs-t{font-size:12.5px;font-weight:800;color:var(--text2);margin-bottom:4px;}
+.wk-ed{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;}
+.wk-ed-hd{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.wk-ed-hd input{flex:1;border:1px solid var(--border2);border-radius:9px;padding:9px 11px;font-family:inherit;font-size:15px;font-weight:700;color:var(--text);}
+.wk-ed-hd .rm{border:1px solid #fca5a5;background:var(--red-light);color:var(--red);width:38px;height:38px;flex-shrink:0;border-radius:9px;font-size:16px;cursor:pointer;font-weight:700;}
+.btn-add{width:100%;background:var(--white);border:1.5px dashed var(--border2);color:var(--text2);padding:11px;font-size:13.5px;margin-bottom:2px;}
+.btn{border:none;border-radius:11px;cursor:pointer;font-family:inherit;font-weight:700;transition:opacity .15s;}
+.btn:active{opacity:.7;}
+.btn-primary{background:var(--blue);color:#fff;width:100%;padding:14px;font-size:15px;margin-top:6px;}
+.btn-row{display:flex;gap:8px;margin-top:12px;}
+.btn-ghost{flex:1;background:var(--white);border:1px solid var(--border2);color:var(--text2);padding:12px;font-size:13.5px;font-weight:700;}
+details.editor{margin-bottom:12px;}
+details.editor>summary{list-style:none;cursor:pointer;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:13px 16px;font-size:13.5px;font-weight:700;color:var(--text2);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;}
+details.editor>summary::-webkit-details-marker{display:none;}
+details.editor[open]>summary{border-radius:var(--radius) var(--radius) 0 0;border-bottom:none;}
+details.editor .ed-body{background:var(--white);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:16px;box-shadow:var(--shadow);}
+.meta{text-align:center;font-size:11px;color:var(--text3);margin:2px 0 16px;}
+.hint{font-size:11px;color:var(--text3);line-height:1.6;margin-top:6px;}
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+canvas#shot{display:none;}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-brand"><div class="icon">✦</div>클로드 사용량</div>
+  <div class="plan-badge" id="planBadge">Pro</div>
+</header>
+
+<div class="main">
+  <div class="meta" id="meta">—</div>
+
+  <!-- 현재 세션 -->
+  <div class="card">
+    <div class="card-title">현재 세션 <span class="sub">5시간 롤링</span></div>
+    <div class="hero">
+      <div class="ring-wrap big" id="ringSession"></div>
+      <div class="hero-info">
+        <div class="lb">세션 사용량</div>
+        <div class="nm">현재 세션</div>
+        <div id="pillSession"></div>
+        <div class="reset" id="resetSession">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 주간 한도 -->
+  <div class="card">
+    <div class="card-title">주간 한도 <span class="sub">7일 롤링</span></div>
+    <div class="wk-grid" id="wkGrid"></div>
+    <div class="legend">
+      <span><i style="background:var(--green)"></i>여유 &lt;50%</span>
+      <span><i style="background:var(--amber)"></i>주의 50–80%</span>
+      <span><i style="background:var(--red)"></i>임박 &gt;80%</span>
+    </div>
+  </div>
+
+  <div class="btn-row" style="margin-bottom:12px">
+    <button class="btn btn-ghost" id="btnShot">📷 이미지로 저장</button>
+  </div>
+
+  <!-- 입력 -->
+  <details class="editor" id="editor">
+    <summary><span>✏️ 사용량 입력 / 수정</span><span style="color:var(--text3)">▾</span></summary>
+    <div class="ed-body">
+      <label class="f">플랜</label>
+      <select class="f" id="inPlan">
+        <option>Free</option><option selected>Pro</option><option>Max 5×</option><option>Max 20×</option><option>Team</option>
+      </select>
+
+      <div class="fieldset" style="margin-top:14px">
+        <div class="fs-t">현재 세션</div>
+        <div class="frow">
+          <div>
+            <label class="f">사용됨 (%)</label>
+            <input class="f" id="inSessionPct" type="number" min="0" max="100" inputmode="numeric" placeholder="2">
+          </div>
+          <div>
+            <label class="f">재설정까지 (시간:분)</label>
+            <div class="frow">
+              <input class="f" id="inSessionH" type="number" min="0" max="24" inputmode="numeric" placeholder="4">
+              <input class="f" id="inSessionM" type="number" min="0" max="59" inputmode="numeric" placeholder="53">
+            </div>
+          </div>
+        </div>
+        <div class="hint">설정 화면의 “N시간 M분 후 재설정”을 그대로 입력하세요.</div>
+      </div>
+
+      <div class="fs-t" style="margin:16px 0 8px">주간 한도 항목</div>
+      <div id="weeklyEditor"></div>
+      <button class="btn btn-add" id="btnAddWeekly" type="button">＋ 모델 항목 추가</button>
+      <div class="hint">모든 모델·Opus·Fable 등 설정에 보이는 항목을 추가하세요. 재설정 시각은 “(요일) 오전/오후 H:MM”을 24시간 형식으로 입력합니다.</div>
+
+      <button class="btn btn-primary" id="btnSave">저장</button>
+    </div>
+  </details>
+
+  <div class="hint" style="text-align:center;padding:0 8px">
+    Claude 앱/웹 설정 → “플랜 사용량 한도”에서 보이는 숫자를 직접 입력하는 도구입니다. 공식 API가 없어 자동 갱신은 되지 않습니다.
+  </div>
+</div>
+
+<canvas id="shot"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='claude_usage_v1';
+const DAYS=['일','월','화','수','목','금','토'];
+const $=id=>document.getElementById(id);
+
+let _seq=0;
+const uid=()=>'w'+(Date.now().toString(36))+(_seq++);
+function wkItem(name,pct){return {id:uid(),name:name,pct:pct||0,day:0,time:'14:59'};}
+function defState(){
+  return {plan:'Pro',
+    session:{pct:0,resetAt:null},
+    weekly:[wkItem('모든 모델'),wkItem('Opus'),wkItem('Fable')],
+    updatedAt:null};
+}
+function load(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY));
+    if(s&&s.session){
+      const st=Object.assign(defState(),s);
+      // 구버전(all/fable 고정 필드) → weekly 배열 마이그레이션
+      if(!Array.isArray(s.weekly)){
+        st.weekly=[];
+        if(s.all)st.weekly.push({id:uid(),name:'모든 모델',pct:s.all.pct||0,day:s.all.day||0,time:s.all.time||'14:59'});
+        st.weekly.push(wkItem('Opus'));
+        if(s.fable)st.weekly.push({id:uid(),name:'Fable',pct:s.fable.pct||0,day:s.fable.day||0,time:s.fable.time||'14:59'});
+        delete st.all;delete st.fable;
+      }
+      return st;
+    }
+  }catch(e){}
+  return defState();
+}
+function save(s){s.updatedAt=Date.now();localStorage.setItem(KEY,JSON.stringify(s));}
+let state=load();
+
+// 색상: 사용량 상태
+function statusColor(p){if(p>=80)return getVar('--red');if(p>=50)return getVar('--amber');return getVar('--green');}
+function getVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function stateInfo(p){if(p>=80)return{cls:'state-crit',t:'임박',ico:'🔴'};if(p>=50)return{cls:'state-warn',t:'주의',ico:'🟡'};return{cls:'state-good',t:'여유',ico:'🟢'};}
+
+// SVG 링 게이지
+function ring(pct,size){
+  const p=Math.max(0,Math.min(100,pct||0));
+  const sw=size>=120?13:11, r=(size-sw)/2, c=2*Math.PI*r, off=c*(1-p/100);
+  const col=statusColor(p);
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--track)" stroke-width="${sw}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${sw}"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
+      style="transition:stroke-dashoffset .6s ease"/>
+  </svg>
+  <div class="ctr"><div class="pct" style="color:${col}">${p}<small>%</small></div><div class="cap">사용됨</div></div>`;
+}
+
+// 다음 주간 재설정 시각 계산
+function nextWeekly(day,time){
+  if(!time)return null;
+  const [h,m]=time.split(':').map(Number);
+  const now=new Date();
+  const d=new Date(now); d.setHours(h,m,0,0);
+  let add=(day-now.getDay()+7)%7;
+  if(add===0 && d<=now)add=7;
+  d.setDate(d.getDate()+add);
+  return d.getTime();
+}
+function fmtLeft(ms){
+  if(ms==null)return '—';
+  if(ms<=0)return '재설정됨';
+  const min=Math.floor(ms/60000), h=Math.floor(min/60), dd=Math.floor(h/24);
+  if(dd>=1)return `${dd}일 ${h%24}시간`;
+  if(h>=1)return `${h}시간 ${min%60}분`;
+  return `${min}분`;
+}
+function fmtClock(ts){
+  if(!ts)return '';
+  const d=new Date(ts), h=d.getHours(), ap=h<12?'오전':'오후', h12=h%12||12;
+  return `(${DAYS[d.getDay()]}) ${ap} ${h12}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function render(){
+  $('planBadge').textContent=state.plan;
+  // 세션
+  $('ringSession').innerHTML=ring(state.session.pct,132);
+  const si=stateInfo(state.session.pct);
+  $('pillSession').innerHTML=`<span class="state-pill ${si.cls}">${si.ico} ${si.t}</span>`;
+  const sLeft=state.session.resetAt? state.session.resetAt-Date.now():null;
+  const sOver=sLeft!=null&&sLeft<=0;
+  $('resetSession').className='reset'+(sOver?' over':'');
+  $('resetSession').innerHTML=state.session.resetAt
+    ? `재설정까지 <b>${fmtLeft(sLeft)}</b>`+(sOver?' · 값 갱신 필요':'')
+    : '재설정 시각 미입력';
+  // 주간
+  $('wkGrid').innerHTML=state.weekly.map(w=>{
+    const ts=nextWeekly(w.day,w.time);
+    return `<div class="wk-item">
+      <div class="nm">${esc(w.name)}</div>
+      <div class="ring-wrap" style="width:104px;height:104px">${ring(w.pct,104)}</div>
+      <div class="reset"><b>${fmtClock(ts)}</b><br>재설정까지 ${fmtLeft(ts?ts-Date.now():null)}</div>
+    </div>`;
+  }).join('') || `<div class="hint" style="grid-column:1/-1;text-align:center">주간 항목이 없습니다 — 아래에서 추가하세요</div>`;
+  // 메타
+  $('meta').textContent=state.updatedAt
+    ? `마지막 입력: ${fmtLeft(Date.now()-state.updatedAt)} 전`
+    : '아직 입력된 값이 없습니다 — 아래에서 입력하세요';
+}
+
+// 주간 편집 행 (동적)
+function dayOptions(sel){return DAYS.map((d,i)=>`<option value="${i}"${i===sel?' selected':''}>${d}요일</option>`).join('');}
+function weeklyRow(w){
+  const div=document.createElement('div');
+  div.className='wk-ed';div.dataset.id=w.id;
+  div.innerHTML=`
+    <div class="wk-ed-hd">
+      <input class="wk-nm" type="text" placeholder="모델명 (예: Opus)" value="${esc(w.name)}">
+      <button class="rm" type="button" title="삭제">✕</button>
+    </div>
+    <div class="frow">
+      <div><label class="f">사용됨 (%)</label><input class="f wk-pct" type="number" min="0" max="100" inputmode="numeric" value="${w.pct||''}" placeholder="0"></div>
+      <div><label class="f">재설정 요일</label><select class="f wk-day">${dayOptions(w.day)}</select></div>
+    </div>
+    <label class="f">재설정 시각</label>
+    <input class="f wk-time" type="time" value="${w.time||'14:59'}">`;
+  div.querySelector('.rm').onclick=()=>div.remove();
+  return div;
+}
+function renderWeeklyEditor(items){
+  const box=$('weeklyEditor');box.innerHTML='';
+  items.forEach(w=>box.appendChild(weeklyRow(w)));
+}
+$('btnAddWeekly').onclick=()=>$('weeklyEditor').appendChild(weeklyRow(wkItem('')));
+
+// 편집 폼 채우기
+function fillForm(){
+  $('inPlan').value=state.plan;
+  $('inSessionPct').value=state.session.pct||'';
+  if(state.session.resetAt){
+    const left=Math.max(0,state.session.resetAt-Date.now());
+    $('inSessionH').value=Math.floor(left/3600000);
+    $('inSessionM').value=Math.floor((left%3600000)/60000);
+  }
+  renderWeeklyEditor(state.weekly);
+}
+function num(id){const v=parseFloat($(id).value);return isNaN(v)?0:v;}
+function numEl(el){const v=parseFloat(el.value);return isNaN(v)?0:v;}
+
+$('btnSave').onclick=()=>{
+  state.plan=$('inPlan').value;
+  state.session.pct=Math.min(100,Math.max(0,num('inSessionPct')));
+  const h=num('inSessionH'),m=num('inSessionM');
+  state.session.resetAt=($('inSessionH').value||$('inSessionM').value)?Date.now()+(h*3600000+m*60000):null;
+  state.weekly=[...$('weeklyEditor').querySelectorAll('.wk-ed')].map(row=>({
+    id:row.dataset.id,
+    name:(row.querySelector('.wk-nm').value.trim())||'모델',
+    pct:Math.min(100,Math.max(0,numEl(row.querySelector('.wk-pct')))),
+    day:parseInt(row.querySelector('.wk-day').value),
+    time:row.querySelector('.wk-time').value||'14:59'
+  }));
+  save(state);render();
+  $('editor').open=false;toast('저장되었습니다');
+};
+
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800);}
+
+// ── PNG 이미지 저장 (Canvas, 외부 라이브러리 없음) ──
+function drawRing(ctx,cx,cy,r,sw,pct){
+  const p=Math.max(0,Math.min(100,pct||0));
+  ctx.lineWidth=sw;ctx.lineCap='round';
+  ctx.strokeStyle=getVar('--track');
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  if(p>0){
+    ctx.strokeStyle=statusColor(p);
+    const s=-Math.PI/2;
+    ctx.beginPath();ctx.arc(cx,cy,r,s,s+Math.PI*2*(p/100));ctx.stroke();
+  }
+  ctx.fillStyle=statusColor(p);ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='800 '+Math.round(r*0.62)+'px Pretendard, sans-serif';
+  ctx.fillText(p+'%',cx,cy-r*0.05);
+  ctx.fillStyle=getVar('--text3');ctx.font='700 '+Math.round(r*0.24)+'px Pretendard, sans-serif';
+  ctx.fillText('사용됨',cx,cy+r*0.38);
+}
+$('btnShot').onclick=()=>{
+  const W=720, wkY=320, rowH=155;
+  const items=state.weekly, nRows=Math.max(1,Math.ceil(items.length/2));
+  const wkH=68+nRows*rowH, footerY=wkY+wkH+40, H=footerY+18;
+  const c=$('shot');c.width=W;c.height=H;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#f4f6f9';ctx.fillRect(0,0,W,H);
+  // 헤더
+  ctx.fillStyle=getVar('--text');ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.font='800 34px Pretendard, sans-serif';ctx.fillText('클로드 사용량',40,66);
+  ctx.fillStyle='#7c2d12';ctx.font='800 20px Pretendard, sans-serif';ctx.textAlign='right';
+  ctx.fillText(state.plan+' 플랜',W-40,62);
+  // 세션 카드
+  roundRect(ctx,40,100,W-80,200,18,'#fff',getVar('--border'));
+  ctx.fillStyle=getVar('--text2');ctx.textAlign='left';ctx.font='700 18px Pretendard, sans-serif';
+  ctx.fillText('현재 세션',72,138);
+  drawRing(ctx,150,208,58,14,state.session.pct);
+  const sLeft=state.session.resetAt?state.session.resetAt-Date.now():null;
+  ctx.fillStyle=getVar('--text');ctx.textAlign='left';ctx.font='800 24px Pretendard, sans-serif';
+  ctx.fillText('재설정까지 '+(sLeft!=null?fmtLeft(sLeft):'—'),256,204);
+  const si=stateInfo(state.session.pct);
+  ctx.fillStyle=getVar('--text3');ctx.font='700 16px Pretendard, sans-serif';
+  ctx.fillText(si.t+' · 5시간 롤링',256,234);
+  // 주간 카드
+  roundRect(ctx,40,wkY,W-80,wkH,18,'#fff',getVar('--border'));
+  ctx.fillStyle=getVar('--text2');ctx.textAlign='left';ctx.font='700 18px Pretendard, sans-serif';
+  ctx.fillText('주간 한도',72,wkY+38);
+  items.forEach((w,i)=>{
+    const cx=(i%2===0)?220:510, base=wkY+58+Math.floor(i/2)*rowH;
+    ctx.fillStyle=getVar('--text');ctx.textAlign='center';ctx.font='800 18px Pretendard, sans-serif';
+    ctx.fillText(w.name,cx,base+20);
+    drawRing(ctx,cx,base+80,46,12,w.pct);
+    ctx.fillStyle=getVar('--text3');ctx.font='600 13px Pretendard, sans-serif';
+    ctx.fillText(fmtClock(nextWeekly(w.day,w.time))+' 재설정',cx,base+142);
+  });
+  // 푸터
+  ctx.fillStyle=getVar('--text3');ctx.textAlign='center';ctx.font='500 14px Pretendard, sans-serif';
+  ctx.fillText('생성: '+fmtClock(Date.now())+'  ·  skytj-tool',W/2,footerY);
+  // 다운로드
+  c.toBlob(b=>{
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);
+    a.download='claude-usage-'+new Date().toISOString().slice(0,10)+'.png';a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  });
+  toast('이미지를 저장했습니다');
+};
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+  ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.lineWidth=1;ctx.strokeStyle=stroke;ctx.stroke();}
+}
+
+fillForm();render();
+if(!state.updatedAt)$('editor').open=true;
+setInterval(render,30000); // 카운트다운 갱신
+</script>
+</body>
+</html>
