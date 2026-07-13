@@ -70,6 +70,11 @@ input.f:focus,select.f:focus{outline:2px solid var(--blue);border-color:var(--bl
 .frow>div{flex:1;}
 .fieldset{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px;}
 .fieldset .fs-t{font-size:12.5px;font-weight:800;color:var(--text2);margin-bottom:4px;}
+.wk-ed{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;}
+.wk-ed-hd{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.wk-ed-hd input{flex:1;border:1px solid var(--border2);border-radius:9px;padding:9px 11px;font-family:inherit;font-size:15px;font-weight:700;color:var(--text);}
+.wk-ed-hd .rm{border:1px solid #fca5a5;background:var(--red-light);color:var(--red);width:38px;height:38px;flex-shrink:0;border-radius:9px;font-size:16px;cursor:pointer;font-weight:700;}
+.btn-add{width:100%;background:var(--white);border:1.5px dashed var(--border2);color:var(--text2);padding:11px;font-size:13.5px;margin-bottom:2px;}
 .btn{border:none;border-radius:11px;cursor:pointer;font-family:inherit;font-weight:700;transition:opacity .15s;}
 .btn:active{opacity:.7;}
 .btn-primary{background:var(--blue);color:#fff;width:100%;padding:14px;font-size:15px;margin-top:6px;}
@@ -114,18 +119,7 @@ canvas#shot{display:none;}
   <!-- 주간 한도 -->
   <div class="card">
     <div class="card-title">주간 한도 <span class="sub">7일 롤링</span></div>
-    <div class="wk-grid">
-      <div class="wk-item">
-        <div class="nm">모든 모델</div>
-        <div class="ring-wrap" id="ringAll" style="width:104px;height:104px"></div>
-        <div class="reset" id="resetAll">—</div>
-      </div>
-      <div class="wk-item">
-        <div class="nm">Fable</div>
-        <div class="ring-wrap" id="ringFable" style="width:104px;height:104px"></div>
-        <div class="reset" id="resetFable">—</div>
-      </div>
-    </div>
+    <div class="wk-grid" id="wkGrid"></div>
     <div class="legend">
       <span><i style="background:var(--green)"></i>여유 &lt;50%</span>
       <span><i style="background:var(--amber)"></i>주의 50–80%</span>
@@ -164,30 +158,10 @@ canvas#shot{display:none;}
         <div class="hint">설정 화면의 “N시간 M분 후 재설정”을 그대로 입력하세요.</div>
       </div>
 
-      <div class="fieldset">
-        <div class="fs-t">주간 · 모든 모델</div>
-        <div class="frow">
-          <div><label class="f">사용됨 (%)</label><input class="f" id="inAllPct" type="number" min="0" max="100" inputmode="numeric" placeholder="4"></div>
-          <div><label class="f">재설정 요일</label>
-            <select class="f" id="inAllDay"></select>
-          </div>
-        </div>
-        <label class="f">재설정 시각</label>
-        <input class="f" id="inAllTime" type="time">
-      </div>
-
-      <div class="fieldset">
-        <div class="fs-t">주간 · Fable</div>
-        <div class="frow">
-          <div><label class="f">사용됨 (%)</label><input class="f" id="inFablePct" type="number" min="0" max="100" inputmode="numeric" placeholder="0"></div>
-          <div><label class="f">재설정 요일</label>
-            <select class="f" id="inFableDay"></select>
-          </div>
-        </div>
-        <label class="f">재설정 시각</label>
-        <input class="f" id="inFableTime" type="time">
-        <div class="hint">설정의 “(요일) 오전/오후 H:MM에 재설정”을 24시간 형식으로 입력하세요.</div>
-      </div>
+      <div class="fs-t" style="margin:16px 0 8px">주간 한도 항목</div>
+      <div id="weeklyEditor"></div>
+      <button class="btn btn-add" id="btnAddWeekly" type="button">＋ 모델 항목 추가</button>
+      <div class="hint">모든 모델·Opus·Fable 등 설정에 보이는 항목을 추가하세요. 재설정 시각은 “(요일) 오전/오후 H:MM”을 24시간 형식으로 입력합니다.</div>
 
       <button class="btn btn-primary" id="btnSave">저장</button>
     </div>
@@ -206,15 +180,31 @@ const KEY='claude_usage_v1';
 const DAYS=['일','월','화','수','목','금','토'];
 const $=id=>document.getElementById(id);
 
+let _seq=0;
+const uid=()=>'w'+(Date.now().toString(36))+(_seq++);
+function wkItem(name,pct){return {id:uid(),name:name,pct:pct||0,day:0,time:'14:59'};}
 function defState(){
   return {plan:'Pro',
     session:{pct:0,resetAt:null},
-    all:{pct:0,day:0,time:'14:59'},
-    fable:{pct:0,day:0,time:'14:59'},
+    weekly:[wkItem('모든 모델'),wkItem('Opus'),wkItem('Fable')],
     updatedAt:null};
 }
 function load(){
-  try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.session)return Object.assign(defState(),s);}catch(e){}
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY));
+    if(s&&s.session){
+      const st=Object.assign(defState(),s);
+      // 구버전(all/fable 고정 필드) → weekly 배열 마이그레이션
+      if(!Array.isArray(s.weekly)){
+        st.weekly=[];
+        if(s.all)st.weekly.push({id:uid(),name:'모든 모델',pct:s.all.pct||0,day:s.all.day||0,time:s.all.time||'14:59'});
+        st.weekly.push(wkItem('Opus'));
+        if(s.fable)st.weekly.push({id:uid(),name:'Fable',pct:s.fable.pct||0,day:s.fable.day||0,time:s.fable.time||'14:59'});
+        delete st.all;delete st.fable;
+      }
+      return st;
+    }
+  }catch(e){}
   return defState();
 }
 function save(s){s.updatedAt=Date.now();localStorage.setItem(KEY,JSON.stringify(s));}
@@ -223,6 +213,7 @@ let state=load();
 // 색상: 사용량 상태
 function statusColor(p){if(p>=80)return getVar('--red');if(p>=50)return getVar('--amber');return getVar('--green');}
 function getVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function stateInfo(p){if(p>=80)return{cls:'state-crit',t:'임박',ico:'🔴'};if(p>=50)return{cls:'state-warn',t:'주의',ico:'🟡'};return{cls:'state-good',t:'여유',ico:'🟢'};}
 
 // SVG 링 게이지
@@ -277,24 +268,47 @@ function render(){
     ? `재설정까지 <b>${fmtLeft(sLeft)}</b>`+(sOver?' · 값 갱신 필요':'')
     : '재설정 시각 미입력';
   // 주간
-  $('ringAll').innerHTML=ring(state.all.pct,104);
-  $('ringFable').innerHTML=ring(state.fable.pct,104);
-  const aTs=nextWeekly(state.all.day,state.all.time), fTs=nextWeekly(state.fable.day,state.fable.time);
-  $('resetAll').innerHTML=`<b>${fmtClock(aTs)}</b><br>재설정까지 ${fmtLeft(aTs?aTs-Date.now():null)}`;
-  $('resetFable').innerHTML=`<b>${fmtClock(fTs)}</b><br>재설정까지 ${fmtLeft(fTs?fTs-Date.now():null)}`;
+  $('wkGrid').innerHTML=state.weekly.map(w=>{
+    const ts=nextWeekly(w.day,w.time);
+    return `<div class="wk-item">
+      <div class="nm">${esc(w.name)}</div>
+      <div class="ring-wrap" style="width:104px;height:104px">${ring(w.pct,104)}</div>
+      <div class="reset"><b>${fmtClock(ts)}</b><br>재설정까지 ${fmtLeft(ts?ts-Date.now():null)}</div>
+    </div>`;
+  }).join('') || `<div class="hint" style="grid-column:1/-1;text-align:center">주간 항목이 없습니다 — 아래에서 추가하세요</div>`;
   // 메타
   $('meta').textContent=state.updatedAt
     ? `마지막 입력: ${fmtLeft(Date.now()-state.updatedAt)} 전`
     : '아직 입력된 값이 없습니다 — 아래에서 입력하세요';
 }
 
+// 주간 편집 행 (동적)
+function dayOptions(sel){return DAYS.map((d,i)=>`<option value="${i}"${i===sel?' selected':''}>${d}요일</option>`).join('');}
+function weeklyRow(w){
+  const div=document.createElement('div');
+  div.className='wk-ed';div.dataset.id=w.id;
+  div.innerHTML=`
+    <div class="wk-ed-hd">
+      <input class="wk-nm" type="text" placeholder="모델명 (예: Opus)" value="${esc(w.name)}">
+      <button class="rm" type="button" title="삭제">✕</button>
+    </div>
+    <div class="frow">
+      <div><label class="f">사용됨 (%)</label><input class="f wk-pct" type="number" min="0" max="100" inputmode="numeric" value="${w.pct||''}" placeholder="0"></div>
+      <div><label class="f">재설정 요일</label><select class="f wk-day">${dayOptions(w.day)}</select></div>
+    </div>
+    <label class="f">재설정 시각</label>
+    <input class="f wk-time" type="time" value="${w.time||'14:59'}">`;
+  div.querySelector('.rm').onclick=()=>div.remove();
+  return div;
+}
+function renderWeeklyEditor(items){
+  const box=$('weeklyEditor');box.innerHTML='';
+  items.forEach(w=>box.appendChild(weeklyRow(w)));
+}
+$('btnAddWeekly').onclick=()=>$('weeklyEditor').appendChild(weeklyRow(wkItem('')));
+
 // 편집 폼 채우기
 function fillForm(){
-  DAYS.forEach((d,i)=>{
-    ['inAllDay','inFableDay'].forEach(id=>{
-      const o=document.createElement('option');o.value=i;o.textContent=d+'요일';$(id).appendChild(o);
-    });
-  });
   $('inPlan').value=state.plan;
   $('inSessionPct').value=state.session.pct||'';
   if(state.session.resetAt){
@@ -302,18 +316,23 @@ function fillForm(){
     $('inSessionH').value=Math.floor(left/3600000);
     $('inSessionM').value=Math.floor((left%3600000)/60000);
   }
-  $('inAllPct').value=state.all.pct||'';$('inAllDay').value=state.all.day;$('inAllTime').value=state.all.time;
-  $('inFablePct').value=state.fable.pct||'';$('inFableDay').value=state.fable.day;$('inFableTime').value=state.fable.time;
+  renderWeeklyEditor(state.weekly);
 }
 function num(id){const v=parseFloat($(id).value);return isNaN(v)?0:v;}
+function numEl(el){const v=parseFloat(el.value);return isNaN(v)?0:v;}
 
 $('btnSave').onclick=()=>{
   state.plan=$('inPlan').value;
   state.session.pct=Math.min(100,Math.max(0,num('inSessionPct')));
   const h=num('inSessionH'),m=num('inSessionM');
   state.session.resetAt=($('inSessionH').value||$('inSessionM').value)?Date.now()+(h*3600000+m*60000):null;
-  state.all={pct:Math.min(100,Math.max(0,num('inAllPct'))),day:parseInt($('inAllDay').value),time:$('inAllTime').value||'14:59'};
-  state.fable={pct:Math.min(100,Math.max(0,num('inFablePct'))),day:parseInt($('inFableDay').value),time:$('inFableTime').value||'14:59'};
+  state.weekly=[...$('weeklyEditor').querySelectorAll('.wk-ed')].map(row=>({
+    id:row.dataset.id,
+    name:(row.querySelector('.wk-nm').value.trim())||'모델',
+    pct:Math.min(100,Math.max(0,numEl(row.querySelector('.wk-pct')))),
+    day:parseInt(row.querySelector('.wk-day').value),
+    time:row.querySelector('.wk-time').value||'14:59'
+  }));
   save(state);render();
   $('editor').open=false;toast('저장되었습니다');
 };
@@ -338,7 +357,10 @@ function drawRing(ctx,cx,cy,r,sw,pct){
   ctx.fillText('사용됨',cx,cy+r*0.38);
 }
 $('btnShot').onclick=()=>{
-  const W=720,H=600,c=$('shot');c.width=W;c.height=H;
+  const W=720, wkY=320, rowH=155;
+  const items=state.weekly, nRows=Math.max(1,Math.ceil(items.length/2));
+  const wkH=68+nRows*rowH, footerY=wkY+wkH+40, H=footerY+18;
+  const c=$('shot');c.width=W;c.height=H;
   const ctx=c.getContext('2d');
   ctx.fillStyle='#f4f6f9';ctx.fillRect(0,0,W,H);
   // 헤더
@@ -358,15 +380,20 @@ $('btnShot').onclick=()=>{
   ctx.fillStyle=getVar('--text3');ctx.font='700 16px Pretendard, sans-serif';
   ctx.fillText(si.t+' · 5시간 롤링',256,234);
   // 주간 카드
-  roundRect(ctx,40,320,W-80,220,18,'#fff',getVar('--border'));
-  ctx.fillStyle=getVar('--text2');ctx.font='700 18px Pretendard, sans-serif';
-  ctx.fillText('주간 한도',72,358);
-  const aTs=nextWeekly(state.all.day,state.all.time),fTs=nextWeekly(state.fable.day,state.fable.time);
-  drawWeekCell(ctx,220,'모든 모델',state.all.pct,aTs);
-  drawWeekCell(ctx,510,'Fable',state.fable.pct,fTs);
+  roundRect(ctx,40,wkY,W-80,wkH,18,'#fff',getVar('--border'));
+  ctx.fillStyle=getVar('--text2');ctx.textAlign='left';ctx.font='700 18px Pretendard, sans-serif';
+  ctx.fillText('주간 한도',72,wkY+38);
+  items.forEach((w,i)=>{
+    const cx=(i%2===0)?220:510, base=wkY+58+Math.floor(i/2)*rowH;
+    ctx.fillStyle=getVar('--text');ctx.textAlign='center';ctx.font='800 18px Pretendard, sans-serif';
+    ctx.fillText(w.name,cx,base+20);
+    drawRing(ctx,cx,base+80,46,12,w.pct);
+    ctx.fillStyle=getVar('--text3');ctx.font='600 13px Pretendard, sans-serif';
+    ctx.fillText(fmtClock(nextWeekly(w.day,w.time))+' 재설정',cx,base+142);
+  });
   // 푸터
   ctx.fillStyle=getVar('--text3');ctx.textAlign='center';ctx.font='500 14px Pretendard, sans-serif';
-  ctx.fillText('생성: '+fmtClock(Date.now())+'  ·  skytj-tool',W/2,574);
+  ctx.fillText('생성: '+fmtClock(Date.now())+'  ·  skytj-tool',W/2,footerY);
   // 다운로드
   c.toBlob(b=>{
     const a=document.createElement('a');a.href=URL.createObjectURL(b);
@@ -374,13 +401,6 @@ $('btnShot').onclick=()=>{
     setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   });
   toast('이미지를 저장했습니다');
-  function drawWeekCell(ctx,cx,nm,pct,ts){
-    ctx.fillStyle=getVar('--text');ctx.textAlign='center';ctx.font='800 18px Pretendard, sans-serif';
-    ctx.fillText(nm,cx,392);
-    drawRing(ctx,cx,458,48,12,pct);
-    ctx.fillStyle=getVar('--text3');ctx.font='600 13px Pretendard, sans-serif';
-    ctx.fillText(fmtClock(ts)+' 재설정',cx,524);
-  }
 };
 function roundRect(ctx,x,y,w,h,r,fill,stroke){
   ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
