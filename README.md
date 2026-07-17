@@ -8,6 +8,7 @@
 |---|---|
 | 스카이티제이 월말 정산 | https://16612743sky1-web.github.io/skytj-tool/ |
 | 펫포커스 재고/원가 관리 | https://16612743sky1-web.github.io/skytj-tool/petfocus/ |
+| 펫포커스 상세페이지 생성기 | https://16612743sky1-web.github.io/skytj-tool/petfocus-detail/ |
 | 클로드 사용량 대시보드 | https://16612743sky1-web.github.io/skytj-tool/claude-usage/ |
 
 ---
