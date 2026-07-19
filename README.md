@@ -1,15 +1,18 @@
 # skytj-tool
 
-핸드폰/PC 브라우저에서 바로 쓰는 사내 관리 도구 모음. 서버 없이 정적 HTML로만 구성되며 **GitHub Pages**로 배포한다.
+핸드폰/PC 브라우저에서 바로 쓰는 **회사업무(카드밴대리점) 도구 모음**. 서버 없이 정적 HTML로만 구성되며 **GitHub Pages**로 배포한다.
 
 🔗 **라이브 주소:** https://16612743sky1-web.github.io/skytj-tool/
 
 | 도구 | 주소 |
 |---|---|
 | 스카이티제이 월말 정산 | https://16612743sky1-web.github.io/skytj-tool/ |
-| 펫포커스 재고/원가 관리 | https://16612743sky1-web.github.io/skytj-tool/petfocus/ |
-| 펫포커스 상세페이지 생성기 | https://16612743sky1-web.github.io/skytj-tool/petfocus-detail/ |
-| 클로드 사용량 대시보드 | https://16612743sky1-web.github.io/skytj-tool/claude-usage/ |
+| 클로드 사용량 대시보드 (개인용) | https://16612743sky1-web.github.io/skytj-tool/claude-usage/ |
+
+> 📦 **펫포커스 도구는 이사했습니다.** 재고/원가 관리·상세페이지 생성기는 이제
+> [`petfocus-inventory`](https://16612743sky1-web.github.io/petfocus-inventory/) 저장소에 있습니다.
+> 옛 주소(`/skytj-tool/petfocus/`, `/skytj-tool/petfocus-detail/`)로 들어가면 새 주소로 자동 이동합니다.
+> 북마크를 새 주소로 바꿔 주세요.
 
 ---
 
