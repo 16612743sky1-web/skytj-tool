@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가맹점 품목 수량 체크</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root {
+  --bg:#f4f6f9;--white:#ffffff;--border:#e2e8f0;--border2:#cbd5e1;
+  --text:#1e293b;--text2:#475569;--text3:#94a3b8;
+  --blue:#2563eb;--blue-light:#eff6ff;--blue-mid:#dbeafe;
+  --green:#16a34a;--green-light:#f0fdf4;--green-mid:#bbf7d0;
+  --orange:#ea580c;--red:#dc2626;--yellow:#d97706;--yellow-light:#fffbeb;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --radius:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-brand .icon{width:32px;height:32px;background:linear-gradient(135deg,#16a34a,#059669);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.nav-brand span{font-size:15px;font-weight:700;color:var(--text);}
+.main{padding:28px;max-width:1400px;margin:0 auto;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:20px;}
+.card-title{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.upload-zone{border:2px dashed var(--border2);border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);}
+.upload-zone:hover{border-color:var(--blue);background:var(--blue-light);}
+.upload-zone.loaded{border-color:var(--green);border-style:solid;background:var(--green-light);}
+.upload-zone input{display:none;}
+.upload-icon{font-size:28px;margin-bottom:8px;}
+.upload-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.upload-desc{font-size:12px;color:var(--text3);line-height:1.5;}
+.upload-file{font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace;margin-top:8px;}
+.btn{border:none;border-radius:8px;cursor:pointer;font-family:'Pretendard',sans-serif;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--blue);color:#fff;padding:10px 20px;font-size:14px;}
+.btn-primary:hover{background:#1d4ed8;transform:translateY(-1px);}
+.btn-primary:disabled{background:#93c5fd;cursor:not-allowed;transform:none;}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);padding:7px 14px;font-size:13px;}
+.btn-ghost:hover{background:var(--bg);border-color:var(--blue);color:var(--blue);}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow);}
+.stat .label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.stat .value{font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace;}
+.stat.blue .value{color:var(--blue);}.stat.green .value{color:var(--green);}.stat.orange .value{color:var(--orange);}
+.table-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.table-scroll{overflow-x:auto;max-height:500px;}
+.table-scroll::-webkit-scrollbar-y{height:5px;}
+.table-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead{position:sticky;top:0;z-index:2;}
+thead th{background:#f8fafc;padding:9px 12px;text-align:left;font-weight:600;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody tr{border-bottom:1px solid #f1f5f9;transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f8fafc;}
+tbody td{padding:8px 12px;vertical-align:middle;}
+.mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
+.badge-primary{background:var(--blue-mid);color:#1e3a8a;}
+.badge-green{background:var(--green-mid);color:#14532d;}
+.badge-gray{background:#f1f5f9;color:var(--text2);}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);}
+.empty-state .icon{font-size:32px;margin-bottom:12px;}
+.empty-state .text{font-size:13px;}
+.filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-label{font-size:12px;font-weight:600;color:var(--text2);display:flex;align-items:center;gap:6px;}
+.filter-select{border:1px solid var(--border2);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);background:var(--white);cursor:pointer;}
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.section-info{font-size:11px;color:var(--text3);}
+@media(max-width:900px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .table-wrap{font-size:11px;}
+  tbody td{padding:6px 8px;}
+  thead th{padding:6px 8px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="icon">📊</div>
+    <span>가맹점 품목 수량 체크</span>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="card">
+    <div class="card-title">📁 엑셀 파일 업로드</div>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <div class="upload-icon">📋</div>
+      <div class="upload-name">엑셀 파일을 여기 드래그하거나 클릭</div>
+      <div class="upload-desc">로컬 브라우저에서만 처리됩니다 (외부 전송 없음)</div>
+      <div class="upload-file" id="fileName"></div>
+    </div>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="stats-row">
+      <div class="stat blue">
+        <div class="label">가맹점</div>
+        <div class="value" id="statFranchises">0</div>
+      </div>
+      <div class="stat green">
+        <div class="label">품목 종류</div>
+        <div class="value" id="statItems">0</div>
+      </div>
+      <div class="stat orange">
+        <div class="label">총 수량</div>
+        <div class="value" id="statTotal">0</div>
+      </div>
+      <div class="stat blue">
+        <div class="label">평균 / 가맹점</div>
+        <div class="value" id="statAvg">0</div>
+      </div>
+    </div>
+
+    <!-- 가맹점별 품목·수량 -->
+    <div class="card">
+      <div class="section-hdr">
+        <div>
+          <div class="section-title">🏪 가맹점별 품목·수량</div>
+          <div class="section-info">가맹점별 모든 요청 품목의 수량 합계</div>
+        </div>
+        <button class="btn btn-ghost" id="btnResetFilters">필터 초기화</button>
+      </div>
+      <div class="filter-bar">
+        <label class="filter-label">
+          가맹점 필터:
+          <select class="filter-select" id="franchiseFilter">
+            <option value="">전체</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table id="franchiseItemTable">
+            <thead>
+              <tr>
+                <th>가맹점</th>
+                <th>품목</th>
+                <th style="text-align:right;">수량</th>
+                <th>요청 회차</th>
+              </tr>
+            </thead>
+            <tbody id="franchiseItemBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 품목별 총 수량 집계 -->
+    <div class="card">
+      <div class="section-hdr">
+        <div>
+          <div class="section-title">📦 품목별 총 수량 집계</div>
+          <div class="section-info">모든 가맹점에서 요청한 품목별 합계</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table id="itemSummaryTable">
+            <thead>
+              <tr>
+                <th style="width:60%;">품목</th>
+                <th style="text-align:right;">수량</th>
+                <th>가맹점 수</th>
+              </tr>
+            </thead>
+            <tbody id="itemSummaryBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 기간별 트렌드 -->
+    <div class="card">
+      <div class="section-hdr">
+        <div>
+          <div class="section-title">📈 기간별 트렌드 (가맹점별)</div>
+          <div class="section-info">가맹점별 요청 기간 및 회차 추적</div>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <label class="filter-label">
+          가맹점:
+          <select class="filter-select" id="trendFranchiseFilter">
+            <option value="">전체</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table id="trendTable">
+            <thead>
+              <tr>
+                <th>가맹점</th>
+                <th>첫 요청일</th>
+                <th>마지막 요청일</th>
+                <th>요청 회차</th>
+                <th>기간</th>
+              </tr>
+            </thead>
+            <tbody id="trendBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="emptyState" class="empty-state">
+    <div class="icon">📂</div>
+    <div class="text">엑셀 파일을 업로드하면 대시보드가 나타납니다</div>
+  </div>
+</div>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const uploadZone = document.getElementById('uploadZone');
+const fileName = document.getElementById('fileName');
+const dashboard = document.getElementById('dashboard');
+const emptyState = document.getElementById('emptyState');
+
+let allData = [];
+
+uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadZone.style.borderColor = 'var(--blue)';
+});
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.style.borderColor = 'var(--border2)';
+});
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.style.borderColor = 'var(--border2)';
+  handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+function handleFile(file) {
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      parseData(rows);
+      fileName.textContent = `✓ ${file.name}`;
+      uploadZone.classList.add('loaded');
+
+    } catch (err) {
+      alert('파일 읽기 실패: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseData(rows) {
+  allData = [];
+
+  if (rows.length < 3) return;
+
+  const headers = rows[0];
+  const franchiseCol = headers.indexOf('가맹점');
+
+  if (franchiseCol === -1) {
+    alert('가맹점 열을 찾을 수 없습니다');
+    return;
+  }
+
+  // 요청 회차 열 찾기 (비고 이후부터가 요청 회차)
+  const bigoCol = headers.indexOf('비고');
+  const requestStartCol = bigoCol >= 0 ? bigoCol + 1 : 7;
+
+  // 요청 회차별 데이터 추출 (row 1은 서브헤더, 2부터가 실제 데이터)
+  for (let i = 2; i < rows.length; i++) {
+    const row = rows[i];
+    const franchise = row[franchiseCol];
+
+    if (!franchise || String(franchise).trim() === '') continue;
+
+    // 요청일, 품목, 수량 반복 패턴 (3열씩)
+    for (let col = requestStartCol; col < row.length; col += 3) {
+      const reqDate = row[col];
+      const item = row[col + 1];
+      const qty = row[col + 2];
+
+      if (item && qty !== undefined && qty !== '') {
+        const quantity = parseInt(qty) || 0;
+        if (quantity > 0) {
+          allData.push({
+            franchise: String(franchise).trim(),
+            reqDate: reqDate ? String(reqDate).trim() : '미지정',
+            item: String(item).trim(),
+            qty: quantity,
+            reqOrder: Math.floor((col - requestStartCol) / 3) + 1
+          });
+        }
+      }
+    }
+  }
+
+  renderDashboard();
+}
+
+function renderDashboard() {
+  if (allData.length === 0) {
+    dashboard.classList.add('hidden');
+    emptyState.classList.remove('hidden');
+    return;
+  }
+
+  emptyState.classList.add('hidden');
+  dashboard.classList.remove('hidden');
+
+  updateStats();
+  updateFranchiseItemTable();
+  updateItemSummary();
+  updateTrend();
+  updateFilters();
+}
+
+function updateStats() {
+  const franchises = new Set(allData.map(d => d.franchise)).size;
+  const items = new Set(allData.map(d => d.item)).size;
+  const total = allData.reduce((sum, d) => sum + d.qty, 0);
+  const avg = Math.round(total / franchises);
+
+  document.getElementById('statFranchises').textContent = franchises;
+  document.getElementById('statItems').textContent = items;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statAvg').textContent = avg;
+}
+
+function updateFranchiseItemTable() {
+  const franchiseFilter = document.getElementById('franchiseFilter').value;
+  const tbody = document.getElementById('franchiseItemBody');
+  tbody.innerHTML = '';
+
+  const grouped = {};
+  allData.forEach(d => {
+    if (franchiseFilter && d.franchise !== franchiseFilter) return;
+
+    const key = `${d.franchise}|${d.item}`;
+    if (!grouped[key]) {
+      grouped[key] = { franchise: d.franchise, item: d.item, qty: 0, dates: new Set() };
+    }
+    grouped[key].qty += d.qty;
+    grouped[key].dates.add(d.reqDate);
+  });
+
+  Object.values(grouped)
+    .sort((a, b) => a.franchise.localeCompare(b.franchise) || a.item.localeCompare(b.item))
+    .forEach(g => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${g.franchise}</td>
+        <td class="mono">${g.item}</td>
+        <td style="text-align:right;font-weight:600;">${g.qty}</td>
+        <td><span class="badge badge-gray">${g.dates.size}회</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+}
+
+function updateItemSummary() {
+  const tbody = document.getElementById('itemSummaryBody');
+  tbody.innerHTML = '';
+
+  const grouped = {};
+  allData.forEach(d => {
+    if (!grouped[d.item]) {
+      grouped[d.item] = { qty: 0, franchises: new Set() };
+    }
+    grouped[d.item].qty += d.qty;
+    grouped[d.item].franchises.add(d.franchise);
+  });
+
+  Object.entries(grouped)
+    .sort((a, b) => b[1].qty - a[1].qty)
+    .forEach(([item, data]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="mono">${item}</td>
+        <td style="text-align:right;font-weight:600;font-size:14px;">${data.qty}</td>
+        <td><span class="badge badge-primary">${data.franchises.size}곳</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+}
+
+function updateTrend() {
+  const trendFilter = document.getElementById('trendFranchiseFilter').value;
+  const tbody = document.getElementById('trendBody');
+  tbody.innerHTML = '';
+
+  const grouped = {};
+  allData.forEach(d => {
+    if (trendFilter && d.franchise !== trendFilter) return;
+
+    if (!grouped[d.franchise]) {
+      grouped[d.franchise] = { dates: [], reqCounts: {} };
+    }
+    grouped[d.franchise].dates.push(d.reqDate);
+    grouped[d.franchise].reqCounts[d.reqDate] = (grouped[d.franchise].reqCounts[d.reqDate] || 0) + 1;
+  });
+
+  Object.entries(grouped)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .forEach(([franchise, data]) => {
+      const dates = [...new Set(data.dates)].filter(d => d !== '미지정').sort();
+      const firstDate = dates[0] || '-';
+      const lastDate = dates[dates.length - 1] || '-';
+
+      const dayDiff = firstDate !== '-' && lastDate !== '-'
+        ? Math.floor((new Date(lastDate) - new Date(firstDate)) / (1000 * 60 * 60 * 24))
+        : 0;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${franchise}</td>
+        <td class="mono">${firstDate}</td>
+        <td class="mono">${lastDate}</td>
+        <td><span class="badge badge-green">${dates.length}회</span></td>
+        <td>${dayDiff > 0 ? dayDiff + '일' : '-'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+}
+
+function updateFilters() {
+  const franchises = [...new Set(allData.map(d => d.franchise))].sort();
+
+  ['franchiseFilter', 'trendFranchiseFilter'].forEach(filterId => {
+    const select = document.getElementById(filterId);
+    const current = select.value;
+
+    select.innerHTML = '<option value="">전체</option>';
+    franchises.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f;
+      opt.textContent = f;
+      select.appendChild(opt);
+    });
+
+    select.value = current;
+    select.addEventListener('change', () => {
+      if (filterId === 'franchiseFilter') updateFranchiseItemTable();
+      else updateTrend();
+    });
+  });
+}
+
+document.getElementById('btnResetFilters').addEventListener('click', () => {
+  document.getElementById('franchiseFilter').value = '';
+  updateFranchiseItemTable();
+});
+</script>
+
+</body>
+</html>
