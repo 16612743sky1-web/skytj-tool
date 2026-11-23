@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<title>가맹점 답장 초안</title>
+<style>
+:root{
+  --bg:#f4f6f9;--white:#ffffff;--border:#e2e8f0;--border2:#cbd5e1;
+  --text:#1e293b;--text2:#475569;--text3:#94a3b8;
+  --blue:#2563eb;--blue-light:#eff6ff;--blue-mid:#dbeafe;
+  --green:#16a34a;--green-light:#f0fdf4;--green-mid:#bbf7d0;
+  --orange:#ea580c;--red:#dc2626;--red-light:#fef2f2;--yellow:#d97706;--yellow-light:#fffbeb;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --radius:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;-webkit-text-size-adjust:100%;}
+.nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-brand .icon{width:30px;height:30px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.nav-brand span{font-size:15px;font-weight:700;}
+.main{padding:16px;max-width:1100px;margin:0 auto;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;}
+.card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.card-title .sub{font-size:12px;font-weight:400;color:var(--text3);}
+.btn{border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.btn-primary{background:var(--blue);color:#fff;padding:10px 16px;font-size:14px;}
+.btn-primary:hover{background:#1d4ed8;}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);padding:7px 12px;font-size:13px;}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue);}
+/* 배너 */
+.banner{background:var(--yellow-light);border:1px solid #fde68a;border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;font-size:13px;line-height:1.6;color:#78350f;}
+.banner summary{font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;}
+.banner summary::-webkit-details-marker{display:none;}
+.banner ul{margin:6px 0 0 18px;}
+/* 회사 설정 */
+details.settings summary{cursor:pointer;font-weight:700;font-size:14px;list-style:none;display:flex;justify-content:space-between;align-items:center;}
+details.settings summary::-webkit-details-marker{display:none;}
+.set-state{font-size:12px;font-weight:500;}
+.set-state.ok{color:var(--green);}.set-state.no{color:var(--orange);}
+/* 유형 */
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.type-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 6px;font-size:14px;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;}
+.type-btn small{display:block;font-size:11px;font-weight:500;color:var(--text3);margin-top:2px;}
+.type-btn.on{background:var(--blue-light);border-color:var(--blue);color:var(--blue);}
+/* 폼 */
+.layout{display:grid;grid-template-columns:1fr;gap:14px;}
+@media(min-width:900px){.layout{grid-template-columns:1fr 1fr;align-items:start;}.out-col{position:sticky;top:66px;}}
+.sec{font-size:12px;font-weight:700;color:var(--blue);margin:16px 0 8px;padding-top:12px;border-top:1px dashed var(--border);}
+.sec:first-child{margin-top:0;padding-top:0;border-top:none;}
+.sec.staff{color:var(--orange);}
+.f{margin-bottom:10px;}
+.f>label.l{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;}
+.f .req{color:var(--red);margin-left:2px;}
+input[type=text],input[type=tel],input[type=number],input[type=date],input[type=datetime-local],select,textarea{width:100%;border:1px solid var(--border2);border-radius:8px;padding:9px 10px;font-size:15px;font-family:inherit;color:var(--text);background:var(--white);}
+textarea{min-height:64px;resize:vertical;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--blue-mid);border-color:var(--blue);}
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{border:1px solid var(--border2);background:var(--white);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--text2);}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+.ck{display:flex;align-items:flex-start;gap:8px;font-size:14px;padding:6px 0;cursor:pointer;line-height:1.4;}
+.ck input{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--blue);}
+.hint{font-size:12px;color:var(--text3);margin-top:3px;}
+.info{border-radius:8px;padding:9px 11px;font-size:13px;line-height:1.55;margin-bottom:10px;}
+.info.blue{background:var(--blue-light);color:#1e3a8a;}
+.info.orange{background:#fff7ed;color:#9a3412;}
+.info.red{background:var(--red-light);color:#991b1b;}
+.info.green{background:var(--green-light);color:#14532d;}
+.info b{font-weight:700;}
+.calc{background:var(--bg);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.7;}
+.calc .big{font-size:18px;font-weight:800;color:var(--blue);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+/* 출력 */
+.out{margin-bottom:14px;}
+.out-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;}
+.out-head h3{font-size:14px;font-weight:700;}
+.out-head .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;margin-left:6px;}
+.tag.m{background:var(--blue-mid);color:var(--blue);}
+.tag.s{background:#ffedd5;color:var(--orange);}
+pre.txt{white-space:pre-wrap;word-break:break-all;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:inherit;font-size:14px;line-height:1.65;min-height:80px;}
+pre.txt .oo{background:#fef3c7;color:#92400e;border-radius:3px;padding:0 2px;}
+.fill{font-size:12px;color:var(--yellow);margin-top:5px;}
+.miss{font-size:12px;color:var(--red);font-weight:600;margin-top:5px;line-height:1.5;}
+.warn-box{margin-bottom:10px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:all .2s;pointer-events:none;z-index:300;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.jump{position:fixed;right:14px;bottom:18px;z-index:200;box-shadow:0 4px 12px rgba(37,99,235,.35);border-radius:999px;padding:11px 16px;}
+@media(min-width:900px){.jump{display:none;}}
+.hide{display:none!important;}
+.footer{font-size:11px;color:var(--text3);text-align:center;padding:10px 0 30px;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand"><div class="icon">💬</div><span>가맹점 답장 초안</span></div>
+  <button class="btn btn-ghost" id="clearAll" type="button">모두 지우기</button>
+</nav>
+
+<div class="main">
+  <details class="banner" id="banner" open>
+    <summary><span>🔒 사내 전용 도구 — 꼭 읽어주세요</span><span id="bannerToggle">접기 ▲</span></summary>
+    <ul>
+      <li>이 화면은 인터넷으로 아무것도 보내지 않습니다. 인터넷이 끊겨도 됩니다.</li>
+      <li>상호·주소·전화번호 등 입력한 내용은 <b>어디에도 저장되지 않고</b>, 새로고침하면 사라집니다.</li>
+      <li>복사한 답장·업무 메모에는 실제 가맹점 정보가 들어가니 회사 밖으로 보내지 마세요.</li>
+      <li>사업자번호·주민번호는 답장에 넣지 마세요. 들어가면 자동으로 가려집니다.</li>
+    </ul>
+  </details>
+
+  <div class="card">
+    <details class="settings" id="settingsBox">
+      <summary><span>⚙️ 회사 정보 설정 <span class="set-state" id="setState"></span></span><span class="sub" style="font-size:12px;color:var(--text3)">열기/닫기</span></summary>
+      <div style="margin-top:12px">
+        <div class="info blue">회수 주소와 회사 연락처는 이 기기 브라우저에만 저장됩니다. 파일이나 인터넷에는 올라가지 않아요. 비워 두면 답장에 OOO로 나갑니다.</div>
+        <div class="f"><label class="l">회수 주소 (택배 받을 곳)</label><input type="text" id="co_addr" autocomplete="off"></div>
+        <div class="f"><label class="l">회사 연락처</label><input type="tel" id="co_tel" autocomplete="off"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="co_save" type="button">이 기기에 저장</button>
+          <button class="btn btn-ghost" id="co_del" type="button">저장된 회사 정보 지우기</button>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <div class="card-title">문의 유형</div>
+    <div class="types" id="types"></div>
+  </div>
+
+  <div class="layout">
+    <div class="card">
+      <form id="form" autocomplete="off" onsubmit="return false"></form>
+    </div>
+    <div class="out-col">
+      <div class="card" id="outCard">
+        <div class="warn-box" id="warns"></div>
+        <div id="outs"></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">스카이티제이 사내용 · 외부 통신 없음 · 가맹점 입력값 저장 안 함</div>
+</div>
+<button type="button" class="btn btn-primary jump" id="jump">답장 보기 ↓</button>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ===== 저장소: 회사 정보·배너 상태만 (가맹점 입력값은 절대 저장하지 않음) ===== */
+const LS_CO='mr_company_v1', LS_BANNER='mr_banner_closed';
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
+let CO={addr:'',tel:''};
+try{const s=JSON.parse(lsGet(LS_CO)||'null');if(s)CO=Object.assign(CO,s);}catch(e){}
+
+/* ===== 공통 유틸 ===== */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const won=n=>Math.round(n).toLocaleString('ko-KR')+'원';
+function fmtDT(v){ // datetime-local → 11월 24일 10시 30분
+  if(!v)return '';const m=v.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);if(!m)return v;
+  let s=(+m[2])+'월 '+(+m[3])+'일';if(m[4]!==undefined){s+=' '+(+m[4])+'시';if(+m[5])s+=' '+(+m[5])+'분';}return s;}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+// 개인정보 가리기: 사업자번호, 주민번호
+const RE_RRN=/(?<!\d)(\d{6})[-\s]?([1-4]\d{6})(?!\d)/g;
+const RE_BIZ=/(?<!\d)(\d{3})[-\s]?(\d{2})[-\s]?(\d{5})(?!\d)/g;
+function findPII(t){const r=[];if(new RegExp(RE_RRN.source).test(t))r.push('주민번호');
+  const b=t.replace(RE_RRN,'');const m=b.match(new RegExp(RE_BIZ.source,'g'))||[];
+  if(m.some(x=>!/^0/.test(x.replace(/\D/g,''))))r.push('사업자번호');return r;}
+function maskPII(t){return t.replace(RE_RRN,(a,p)=>p+'-*******').replace(RE_BIZ,(a,p1,p2,p3)=>/^0/.test(p1)?a:p1+'-**-*****');}
+
+/* ===== 공통 필드 묶음 ===== */
+const F_CALLER=[
+  {k:'caller',l:'전화 발신자',t:'chips',o:['대표자','가족','직원','매니저','담당자','기타']},
+  {k:'callerName',l:'발신자 이름',t:'text',ph:'예: 김OO 매니저'},
+];
+const F_INTAKE=[
+  {sec:'접수 필수 (업무방에 꼭 올릴 것)'},
+  {k:'name',l:'① 상호',t:'text',req:1},
+  {k:'addr',l:'② 주소 (정확하게)',t:'text',req:1},
+  {k:'phone',l:'③ 연락 온 번호',t:'tel',req:1},
+  {k:'model',l:'④ 장비 모델명',t:'text',ph:'예: KCP-8800',req:1},
+  {k:'photo',l:'장비 사진 받음',t:'check',req:1},
+  ...F_CALLER,
+];
+const F_VISIT=[
+  {sec:'방문요청 체크 (직원용)',staff:1},
+  {k:'hours',l:'오픈·마감 시간 / 휴무일',t:'text',ph:'예: 10시~22시, 월요일 휴무'},
+  {k:'beforeOpen',l:'오픈 전 방문',t:'chips',o:['가능','불가','미확인']},
+  {k:'pw',l:'비밀번호·열쇠 확인함',t:'check',show:v=>v.beforeOpen==='가능'},
+  {k:'noVisit',l:'방문 불가 날짜·시간 (이중방문 방지)',t:'text'},
+  {k:'ilji',l:'업무일지 작성',t:'check'},
+];
+const FAULT_TEXT='점검 결과 침수·파손·낙하 등 사용 중 손상으로 확인되면 수리비가 실비로 청구될 수 있으며, 금액은 확인 후 먼저 안내드립니다.';
+
+/* ===== 유형 정의 ===== */
+const TYPES={};
+
+/* --- A/S --- */
+TYPES.as={label:'A/S 접수',sub:'고장·오류',fields:[
+  ...F_INTAKE,
+  {sec:'증상 및 처리'},
+  {k:'symptom',l:'⑤ 증상',t:'textarea',req:1},
+  {k:'action',l:'처리',t:'chips',o:['원격 처리 완료','방문 점검','교체 필요']},
+  {k:'actionNote',l:'처리 내용',t:'textarea',ph:'예: 통신 설정 재세팅 후 승인 테스트 정상'},
+  {k:'visitAt',l:'방문 예정일시',t:'datetime-local',show:v=>v.action==='방문 점검'},
+  {k:'extra',l:'추가 요청사항',t:'textarea'},
+  {info:v=>v.action==='교체 필요'?['blue','교체가 필요하면 위쪽 <b>단말기 교체</b> 유형을 눌러 이어서 작성하세요. 입력한 내용은 그대로 넘어갑니다.']:null},
+  {k:'fault',l:'가맹점 과실 가능성 있음 (침수·파손·낙하)',t:'check'},
+  {k:'sugeum',l:'비용청구 안내 후 수금방 작성',t:'check',show:v=>v.fault},
+  ...F_VISIT.map(f=>Object.assign({},f,{show:v=>v.action==='방문 점검'&&(!f.show||f.show(v))})),
+],
+build(v,g){
+  const a=v.action||'';let act;
+  if(a==='원격 처리 완료')act='원격 점검으로 처리 완료';
+  else if(a==='방문 점검')act='방문 점검 ('+g('visitAt','방문일시',fmtDT)+' 예정)';
+  else if(a==='교체 필요')act='단말기 교체 필요 (일정 확인 후 안내)';
+  else act=g('action','처리');
+  let r='[스카이티제이 A/S 접수 안내]\n상호: '+g('name','상호')+'\n증상: '+g('symptom','증상')+'\n조치: '+act;
+  if(v.actionNote)r+='\n처리 내용: '+v.actionNote;
+  r+='\n\n';
+  if(a==='원격 처리 완료')r+='같은 증상이 다시 나타나면 바로 연락 주세요.';
+  else if(a==='방문 점검')r+='방문 전에 미리 연락드리겠습니다.';
+  else r+='확인 후 바로 연락드리겠습니다.';
+  if(v.fault)r+='\n\n'+FAULT_TEXT;
+  return [{t:'가맹점 답장',kind:'m',text:r}];
+},
+memo:v=>commonMemo(v,'A/S')+line('증상',v.symptom)+line('처리',[v.action,v.actionNote].filter(Boolean).join(' / '))
+  +(v.action==='방문 점검'?visitMemo(v):'')+line('추가 요청',v.extra)+(v.fault?'과실 가능성: 있음 (비용 안내'+(v.sugeum?', 수금방 작성 O':', 수금방 작성 X')+')\n':''),
+missing:v=>intakeMissing(v).concat(v.symptom?[]:['증상']).concat(v.action==='방문 점검'?visitMissing(v):[]).concat(v.fault&&!v.sugeum?['수금방 작성']:[]),
+};
+
+/* --- 교체 --- */
+TYPES.swap={label:'단말기 교체',sub:'방문·택배',fields:[
+  ...F_INTAKE,
+  {sec:'증상 및 교체 방식'},
+  {k:'symptom',l:'⑤ 증상',t:'textarea',req:1},
+  {k:'method',l:'교체 방식',t:'chips',o:['방문 교체','택배 교체']},
+  {k:'visitAt',l:'방문 예정일시',t:'datetime-local',show:v=>v.method==='방문 교체'},
+  {k:'extra',l:'추가 요청사항',t:'textarea'},
+  {info:v=>v.method==='택배 교체'&&!CO.addr?['orange','회수 주소가 설정돼 있지 않아 답장에 OOO로 나갑니다. 위 <b>회사 정보 설정</b>에서 입력하세요.']:null},
+  {k:'fault',l:'가맹점 과실 가능성 있음 (침수·파손·낙하)',t:'check'},
+  {k:'sugeum',l:'비용청구 안내 후 수금방 작성',t:'check',show:v=>v.fault},
+  {sec:'택배교체 체크 (직원용)',staff:1,show:v=>v.method==='택배 교체'},
+  {k:'invoice',l:'택배 송장 출력',t:'check',show:v=>v.method==='택배 교체'},
+  {k:'ledger',l:'원장 필요 시 업무방에 첨부',t:'check',show:v=>v.method==='택배 교체'},
+  {k:'callBack',l:'"교체 후 전화 달라" 안내함',t:'check',show:v=>v.method==='택배 교체'},
+  ...F_VISIT.map(f=>Object.assign({},f,{show:v=>v.method==='방문 교체'&&(!f.show||f.show(v))})),
+],
+build(v,g){
+  const parcel=v.method==='택배 교체';
+  let act=parcel?'새 단말기 택배 발송 후 기존 단말기 회수':v.method==='방문 교체'?'단말기 교체 방문 ('+g('visitAt','방문일시',fmtDT)+' 예정)':g('method','교체 방식');
+  let r='[스카이티제이 A/S 접수 안내]\n상호: '+g('name','상호')+'\n증상: '+g('symptom','증상')+'\n조치: '+act+'\n\n';
+  r+='단말기는 무상으로 교체해 드리며, 기존 단말기는 제조사 점검 후 처리됩니다.\n'+FAULT_TEXT;
+  if(parcel){
+    r+='\n\n새 단말기는 택배로 보내드립니다. 받으신 후 기존 단말기는 아래 주소로 택배 보내주시면 됩니다.\n\n보내실 것: 단말기 본체, 아답터, 케이블 (한 세트)\n주소: '+co('addr','회수 주소',g)+'\n연락처: '+co('tel','회사 연락처',g);
+    r+='\n\n교체 끝나시면 꼭 전화 한 번 주세요. 그래야 기존 장비 회수 일정을 잡을 수 있습니다.';
+  }
+  return [{t:'가맹점 답장',kind:'m',text:r}];
+},
+memo:v=>commonMemo(v,'단말기 교체')+line('증상',v.symptom)+line('교체 방식',v.method)
+  +(v.method==='방문 교체'?visitMemo(v):'')
+  +(v.method==='택배 교체'?'송장 출력: '+ox(v.invoice)+' / 교체 후 전화 안내: '+ox(v.callBack)+'\n':'')
+  +line('추가 요청',v.extra)+'비용 안내: 카톡 O'+(v.fault?' / 과실 가능성 있음, 수금방 '+ox(v.sugeum):'')+'\n',
+missing:v=>intakeMissing(v).concat(v.symptom?[]:['증상']).concat(v.method?[]:['교체 방식'])
+  .concat(v.method==='방문 교체'?visitMissing(v):[])
+  .concat(v.method==='택배 교체'?[[v.invoice,'송장 출력'],[v.callBack,'교체 후 전화 안내']].filter(x=>!x[0]).map(x=>x[1]):[])
+  .concat(v.fault&&!v.sugeum?['수금방 작성']:[]),
+};
+
+/* --- 해지 --- */
+const REASONS=['폐업','타밴 변경','서비스 불만','장비 불만','가격 불만','불필요','기타'];
+const isComplaint=v=>/불만/.test(v.reason||'');
+TYPES.cancel={label:'해지',sub:'철수·위약금',fields:[
+  ...F_INTAKE,
+  {sec:'철수 사유'},
+  {k:'reason',l:'철수 사유',t:'chips',o:REASONS},
+  {k:'reasonDetail',l:'사유 상세 (최대한 자세히)',t:'textarea',ph:'예: 폐업, 승계 없음 / 타사 밴으로 변경 예정'},
+  {info:v=>v.reason==='폐업'?['orange','<b>승계 가능 여부를 꼭 물어보세요.</b> 매장을 넘기시는 거라면 승계로 계약을 이어갈 수 있습니다.']:null},
+  {k:'succession',l:'승계 가능 여부',t:'chips',o:['승계 가능','승계 없음','미확인'],show:v=>v.reason==='폐업'},
+  {info:v=>v.reason==='폐업'&&v.succession==='승계 가능'?['green','승계 가능 → <button type="button" class="btn btn-ghost" id="toSuccession" style="margin-top:6px">사업자변경(승계)로 이어서 작성</button>']:null},
+  {info:v=>isComplaint(v)?['orange','<b>계약 유지를 먼저 시도하세요.</b> 불편한 점을 개선하거나 제품 업데이트·교체 등으로 유지할 수 있으면 유지하도록 안내합니다.']:null},
+  {k:'cancelDate',l:'해지 희망일',t:'date'},
+  {sec:'방문·반납'},
+  {k:'returnHow',l:'반납 방식',t:'chips',o:['방문 회수','착불 택배','지사 업무요청']},
+  {info:v=>v.returnHow==='착불 택배'?['blue','유선 단말기 1대면 착불 택배로 많이 진행합니다.']:v.returnHow==='지사 업무요청'?['blue','지방이면 담당 지사로 업무요청하세요.']:null},
+  {k:'callback',l:'재통화 시 연락 가능한 번호',t:'tel',show:v=>v.returnHow==='방문 회수'},
+  {k:'visitWindow',l:'방문 가능 시간',t:'text',ph:'예: 평일 14~17시',show:v=>v.returnHow==='방문 회수'},
+  {k:'keyAccess',l:'시간 애매할 때 비번·열쇠 확보',t:'chips',o:['가능','불가','미확인'],show:v=>v.returnHow==='방문 회수'},
+  {k:'noVisit',l:'방문 불가 날짜·시간 (이중방문 방지)',t:'text',show:v=>v.returnHow==='방문 회수'},
+  {k:'route',l:'해지 처리 경로',t:'chips',o:['메이트커넥트','ASP','기타']},
+  {sec:'위약금 계산'},
+  {k:'rent',l:'월 임대료 (원)',t:'number',ph:'예: 33000'},
+  {k:'rentVat',l:'위 금액은 부가세 포함 금액',t:'check',def:true},
+  {k:'startDate',l:'약정 시작일 (3년 약정 기준)',t:'date'},
+  {k:'remain',l:'남은 개월 (비우면 자동 계산)',t:'number',ph:'자동'},
+  {k:'closed',l:'이미 폐업 (세금계산서 발행 불가 → 부가세 제외 산정)',t:'check'},
+  {calc:1},
+  {k:'cms',l:'CMS 미납금 (원, 없으면 0)',t:'number'},
+  {k:'showPenalty',l:'답장에 예상 위약금 넣기',t:'check'},
+  {sec:'마무리 체크 (직원용)',staff:1},
+  {k:'cmsChecked',l:'CMS 미납금 확인함',t:'check'},
+  {k:'recorded',l:'카톡업무방·수금방·업무엑셀에 기록함',t:'check'},
+],
+build(v,g){
+  let r='사장님, 해지 요청 접수했습니다.\n상호: '+g('name','상호')+'\n해지 희망일: '+g('cancelDate','해지 희망일',fmtDT)+'\n\n';
+  const h=v.returnHow;
+  if(h==='방문 회수')r+='단말기는 직접 방문해서 회수하겠습니다. 방문 일정은 다시 연락드려 맞추겠습니다.';
+  else if(h==='착불 택배')r+='단말기는 착불 택배로 아래 주소로 보내주시면 됩니다.\n보내실 것: 단말기 본체, 아답터, 케이블 (한 세트)\n주소: '+co('addr','회수 주소',g)+'\n연락처: '+co('tel','회사 연락처',g);
+  else if(h==='지사 업무요청')r+='단말기 회수는 가까운 지사에서 연락드려 진행하겠습니다.';
+  else r+='단말기 반납 방법: '+g('returnHow','반납 방식');
+  if(v.showPenalty){
+    const c=calcPenalty(v);
+    r+='\n\n약정 잔여 기간에 따른 위약금 안내드립니다.\n';
+    if(c.ok){r+='월 임대료 '+won(c.base)+' × 남은 기간 '+c.months+'개월 = '+won(c.penalty);
+      if(c.exVat)r+='\n(폐업으로 세금계산서 발행이 어려워 부가세를 제외한 금액으로 산정했습니다.)';}
+    else r+='위약금: '+g('rent','월 임대료·약정 시작일');
+    r+='\nCMS 미납분이 있는지 확인 후 최종 금액을 다시 안내드리겠습니다.';
+  }
+  r+='\n\n그동안 이용해 주셔서 감사합니다.';
+  return [{t:'가맹점 답장',kind:'m',text:r}];
+},
+memo:v=>{const c=calcPenalty(v);
+  return commonMemo(v,'해지')+line('철수 사유',[v.reason,v.reasonDetail].filter(Boolean).join(' / '))
+  +(v.reason==='폐업'?line('승계',v.succession||'미확인'):'')+line('해지 희망일',fmtDT(v.cancelDate))
+  +line('반납 방식',v.returnHow)+(v.returnHow==='방문 회수'?line('재통화 번호',v.callback)+line('방문 가능 시간',v.visitWindow)+line('비번·열쇠',v.keyAccess)+line('방문 불가',v.noVisit):'')
+  +line('해지 경로',v.route)
+  +(c.ok?'위약금: '+won(c.base)+' × '+c.months+'개월 = '+won(c.penalty)+(c.exVat?' (폐업, 부가세 제외)':'')+'\n':'')
+  +(v.cms!==''&&v.cms!=null?'CMS 미납: '+won(+v.cms||0)+(c.ok?' → 합계 '+won(c.penalty+(+v.cms||0)):'')+'\n':'')
+  +'CMS 확인: '+ox(v.cmsChecked)+' / 업무방·수금방·엑셀 기록: '+ox(v.recorded)+'\n';},
+missing:v=>intakeMissing(v).concat([[v.reason,'철수 사유'],[v.returnHow,'반납 방식'],[v.route,'해지 경로'],[v.cmsChecked,'CMS 미납 확인'],[v.recorded,'업무방·수금방·엑셀 기록']].filter(x=>!x[0]).map(x=>x[1]))
+  .concat(v.reason==='폐업'&&!v.succession?['승계 여부 질문']:[]),
+};
+function monthsBetween(a,b){const x=new Date(a+'T00:00'),y=new Date(b+'T00:00');if(isNaN(x)||isNaN(y))return null;
+  let m=(y.getFullYear()-x.getFullYear())*12+(y.getMonth()-x.getMonth());if(y.getDate()<x.getDate())m--;return m;}
+function autoRemain(v){if(!v.startDate)return null;const end=v.cancelDate||todayStr();const e=monthsBetween(v.startDate,end);if(e==null)return null;return Math.max(0,36-e);}
+function calcPenalty(v){
+  const rent=+v.rent;const months=v.remain!==''&&v.remain!=null?Math.max(0,Math.floor(+v.remain)):autoRemain(v);
+  const exVat=!!v.closed||v.reason==='폐업';
+  if(!(rent>0)||months==null||isNaN(months))return {ok:false,exVat,months};
+  const base=exVat&&v.rentVat?Math.round(rent/1.1):rent;
+  return {ok:true,base,months,penalty:base*months,exVat,auto:!(v.remain!==''&&v.remain!=null)};
+}
+
+/* --- 수수료 --- */
+TYPES.fee={label:'수수료',sub:'카드 수수료율',fields:[
+  {sec:'문의 내용'},
+  {k:'name',l:'상호 (선택)',t:'text'},
+  ...F_CALLER,
+  {k:'kind',l:'문의 요지',t:'chips',o:['수수료가 올랐어요','왜 이 카드만 비싸요','낮춰 주세요','기타']},
+  {k:'card',l:'말씀하신 카드사 (선택)',t:'text',ph:'예: OO카드'},
+  {k:'detail',l:'문의 상세 / 기타 내용',t:'textarea'},
+  {k:'willCheck',l:'당사에서 확인 후 회신하기로 함',t:'check'},
+  {info:()=>['blue','구체 요율 숫자는 넣지 않습니다. 요율은 카드사가 정하고 반기마다 바뀌어서, 틀린 숫자가 나가면 더 큰 민원이 됩니다.']},
+],
+build(v,g){
+  const card=v.card?v.card+' ':'';let r='사장님, 카드 수수료 문의 주셔서 감사합니다.\n\n';
+  const k=v.kind;
+  if(k==='수수료가 올랐어요')r+='카드 수수료율은 카드사가 정하며, 반기마다 가맹점의 매출액을 기준으로 영세·중소·일반 구간이 다시 정해집니다. 매출이 늘어 구간이 바뀌면 수수료율도 함께 바뀔 수 있습니다.';
+  else if(k==='왜 이 카드만 비싸요')r+=card+'수수료율은 카드사마다 따로 정하고 있어서 카드사별로 조금씩 차이가 있습니다. 같은 매출 구간이어도 카드사에 따라 요율이 다를 수 있습니다.';
+  else if(k==='낮춰 주세요')r+='말씀 충분히 이해합니다. 다만 카드 수수료율은 카드사가 정하는 부분이라 저희 대리점에서 조정해 드릴 수는 없습니다. 대신 현재 매출 구간이 맞게 적용돼 있는지는 저희가 확인해 드리겠습니다.';
+  else r+=(v.detail?v.detail+'\n\n':'')+'카드 수수료율은 카드사가 정하며, 반기마다 매출액 기준으로 다시 정해집니다.';
+  r+='\n\n정확한 '+card+'수수료율은 각 카드사 고객센터나 가맹점 매출 조회 서비스에서 확인하실 수 있습니다.';
+  if(v.willCheck)r+='\n필요하시면 저희가 확인 후 다시 연락드리겠습니다.';
+  return [{t:'가맹점 답장',kind:'m',text:r}];
+},
+memo:v=>commonMemo(v,'수수료 문의')+line('요지',v.kind)+line('카드사',v.card)+line('상세',v.detail)+'당사 확인 후 회신: '+ox(v.willCheck)+'\n',
+missing:v=>[[v.kind,'문의 요지'],[v.caller,'발신자']].filter(x=>!x[0]).map(x=>x[1]),
+};
+
+/* --- 신규 --- */
+const DOC_PERSONAL=[
+  '1. 사업자등록증 사본 1부',
+  '2. 대표자님 주민등록증 앞/뒷면 (주민번호 가리지 마시고, 현주소가 보이게)',
+  '3. 대표자 통장 사본 1부',
+  '4. 영업신고증 사본 1부 (요식업, 유흥업, 의료개설증, 미용업, 학원 등 해당 업종만)',
+  '5. 내부사진: 업장 내부 1장, 업종 확인이 가능한 내부 1장',
+  '6. 외부사진: 간판 1장 (간판이 없으면 도로명 사진으로 대체), 입구 1장',
+  '7. 대표자 본인 명의 휴대폰번호 (본인 명의 휴대폰이 없으면 본인서명사실확인서 1장, 동사무소 발급)',
+  '8. 매장 전화번호 (없으면 생략)',
+  '9. 이메일 주소 (필수)'];
+const DOC_JOINT=[
+  '[공동대표 추가 서류]',
+  '- 각 대표자 신분증 사본',
+  '- 공동대표 결제계좌 이용 신청 및 동의서',
+  '- 공동대표 가맹점 가입 동의 및 위임장',
+  '- 사업자용 공동인증서'];
+const DOC_CORP=[
+  '1. 법인 사업자등록증 (지점이면 본점 사업자등록증도 함께)',
+  '2. 대표자 신분증 컬러사진 또는 스캔본',
+  '3. 법인 계좌 사본 (법인인감과 사용인감이 다르면 사용인감계 작성)',
+  '4. 법인 인감증명서, 법인등기부등본 전부사항증명서 (90일 이내 발행, 제출용 각 1부)',
+  '5. 주주명부 (90일 이내 발행, 법인도장 날인)',
+  '6. 사진: 외부 건물 1장, 외부 간판 1장, 내부로 들어가는 입구 1장, 내부 전체 1장',
+  '7. 대표자 휴대폰번호',
+  '8. "사업자 공인인증서" 전자서명 링크를 받을 이메일 주소'];
+const CORP_KINDS_A=['주식회사','합명·합자·유한회사'];
+const CORP_KINDS_B=['유치원·어린이집','아파트관리사무소','비영리법인·임의단체'];
+function corpGroup(code){const c=String(code||'').replace(/\D/g,'');if(c.length!==2)return null;const n=+c;
+  if(n===81||(n>=84&&n<=88))return 'A';if(n===80||n===82||n===89)return 'B';return 'X';}
+function corpDocs(v){const grp=corpGroup(v.corpCode);const k=v.corpKind;const out=[];
+  if(grp==='A'){if(k==='주식회사')out.push('- 주주명부');else if(k==='합명·합자·유한회사')out.push('- 지분율표 또는 사원명부');
+    if(k)out.push('(금융회사나 사업보고서 제출 대상 법인은 제외)');}
+  else if(grp==='B'){if(k==='유치원·어린이집')out.push('- 인가증 또는 위탁계약서');
+    else if(k==='아파트관리사무소')out.push('- 아파트 관리규약, 입주자대표회의록 (회의록이 없으면 공문으로 대체 가능)');
+    else if(k==='비영리법인·임의단체')out.push('- 법인등기부등본, 출자자명부, 정관/규약/규칙/회칙/의사록/회의록 등 (등기부등본·출자자명부는 발급 가능한 경우만)');
+    if(String(v.corpCode).replace(/\D/g,'')==='82')out.push('(카드사에 따라 법인등기부등본과 정관(또는 회칙)을 모두 요청할 수 있습니다.)');}
+  return out;}
+const NEED_DONE=[['netDone','인터넷 공사'],['elecDone','전기 공사'],['interiorDone','인테리어 공사'],['counterDone','카운터 장비 자리']];
+TYPES.newm={label:'신규문의',sub:'설치·서류',fields:[
+  {sec:'기본 정보'},
+  {k:'name',l:'상호 (가칭 가능)',t:'text'},
+  {k:'phone',l:'연락처',t:'tel'},
+  {k:'addr',l:'설치 주소',t:'text'},
+  ...F_CALLER,
+  {sec:'확인 사항 (직원용)',staff:1},
+  {k:'source',l:'우리 업체를 알게 된 경로',t:'chips',o:['인터넷','지인소개','과거 이용 가맹점','기타']},
+  {k:'cardMember',l:'카드가맹 유무',t:'chips',o:['가맹 있음','가맹 없음','모름']},
+  {k:'bizType',l:'사업자 유형',t:'chips',o:['개인','개인 공동대표','법인']},
+  {k:'corpCode',l:'사업자번호 가운데 2자리 (4~5번째 숫자만)',t:'text',ph:'예: 81',show:v=>v.bizType==='법인',hint:'전체 사업자번호는 넣지 마세요. 가운데 두 자리만으로 필요한 서류를 고릅니다.'},
+  {k:'corpKind',l:'법인 종류',t:'chips',o:CORP_KINDS_A,show:v=>v.bizType==='법인'&&corpGroup(v.corpCode)==='A'},
+  {k:'corpKind',l:'기관 종류',t:'chips',o:CORP_KINDS_B,show:v=>v.bizType==='법인'&&corpGroup(v.corpCode)==='B',alt:1},
+  {info:v=>v.bizType==='법인'&&corpGroup(v.corpCode)==='X'?['orange','이 코드는 유형별 추가 서류표에 없습니다. 카드사에 확인하세요.']:null},
+  {k:'docsSent',l:'서류 안내 문자·이메일 발송함',t:'check'},
+  {sec:'설치 일정'},
+  {k:'openDate',l:'오픈 예정일',t:'date'},
+  {k:'netDone',l:'인터넷 공사 완료',t:'check'},
+  {k:'elecDone',l:'전기 공사 완료 (카운터에 랜선 확보)',t:'check'},
+  {k:'interiorDone',l:'인테리어 공사 완료',t:'check'},
+  {k:'counterDone',l:'카운터 장비 놓을 자리 마련',t:'check'},
+  {k:'visitWindow',l:'방문 가능 시간',t:'text',show:v=>NEED_DONE.every(x=>v[x[0]])},
+  {info:v=>NEED_DONE.every(x=>v[x[0]])?null:['blue','공사·자리 준비가 끝나야 방문 일정을 잡을 수 있습니다. 불필요한 방문이 없도록 답장에 준비 안내가 들어갑니다.']},
+  {k:'withDocs',l:'답장에 필요서류 목록 넣기',t:'check',def:true},
+],
+build(v,g){return [{t:'가맹점 답장',kind:'m',text:newReply(v,g,false)}];},
+memo:v=>commonMemo(v,'신규문의')+line('경로',v.source)+line('카드가맹',v.cardMember)+line('사업자 유형',v.bizType+(v.bizType==='법인'&&v.corpKind?' ('+v.corpKind+')':''))
+  +line('오픈 예정',fmtDT(v.openDate))+'준비: '+NEED_DONE.map(x=>x[1]+' '+ox(v[x[0]])).join(', ')+'\n'+line('방문 가능 시간',v.visitWindow)+'서류 안내 발송: '+ox(v.docsSent)+'\n',
+missing:v=>[[v.source,'연락 경로'],[v.cardMember,'카드가맹 유무'],[v.bizType,'사업자 유형'],[v.caller,'발신자 신분'],[v.docsSent,'서류 안내 발송']].filter(x=>!x[0]).map(x=>x[1])
+  .concat(v.bizType==='법인'&&!v.corpKind&&corpGroup(v.corpCode)!=='X'?['법인 종류']:[]),
+};
+function newReply(v,g,isTransferee){
+  let r='사장님, '+(isTransferee?'사업장 인수 관련 연락':'카드 단말기 설치 문의')+' 주셔서 감사합니다.\n';
+  if(v.openDate)r+='오픈 예정일: '+fmtDT(v.openDate)+'\n';
+  if(isTransferee&&v.equipKeep==='그대로 사용')r+='\n기존 장비를 그대로 사용하시면 계약도 이어서 승계됩니다.\n';
+  const notDone=NEED_DONE.filter(x=>!v[x[0]]);
+  if(notDone.length){
+    r+='\n설치 방문은 인터넷·전기·인테리어 공사가 끝나고 카운터에 장비 놓을 자리가 마련된 후에 가능합니다. 준비되시면 연락 주세요. 그때 방문 일정을 잡아 드리겠습니다.';
+    if(!v.elecDone)r+='\n\n전기공사 하시는 분께 원하시는 카운터 자리에 랜선을 뽑아 달라고 꼭 말씀해 주세요. 어려우면 빈 관이라도 남겨 달라고 해 주세요. 포스나 CCTV가 아니라 저희 장비에 필요한 건 "랜선"입니다.';
+  }else{
+    r+='\n준비가 다 되어 있으시면 방문 가능한 시간을 알려 주세요. '+(v.visitWindow?'말씀하신 '+v.visitWindow+' 중으로 일정 잡아 연락드리겠습니다.':'일정 잡아 연락드리겠습니다.');
+  }
+  if(v.withDocs){
+    const t=v.bizType;
+    if(!t)r+='\n\n필요서류는 사업자 유형(개인/공동대표/법인) 확인 후 따로 안내드리겠습니다.';
+    else{
+      r+='\n\n[카드사 신규 가맹신청 필요서류 - '+t+']\n';
+      r+=(t==='법인'?DOC_CORP:DOC_PERSONAL).join('\n');
+      if(t==='개인 공동대표')r+='\n\n'+DOC_JOINT.join('\n');
+      if(t==='법인'){const cd=corpDocs(v);r+='\n9. 법인 유형별 필수 서류 (단체·법인 직인 날인 필수)'+(cd.length?'\n'+cd.join('\n'):': '+g('corpKind','법인 유형별 서류'));}
+      r+='\n\n서류는 사진으로 찍어 이 번호로 보내주시면 됩니다. 잘림·흔들림·빛반사 없이 위에서 정면으로 찍어 주세요.\n카드사에서 추가 서류를 요청할 수 있습니다.\n가맹 승인까지 평일 기준 3일 정도 걸립니다.';
+    }
+  }
+  return r;
+}
+
+/* --- 승계 --- */
+TYPES.succ={label:'사업자변경',sub:'양도·양수 승계',fields:[
+  {sec:'기본 정보'},
+  {k:'name',l:'상호',t:'text'},
+  {k:'addr',l:'주소',t:'text'},
+  {k:'phone',l:'양도인(기존 사장님) 연락처',t:'tel'},
+  {k:'phone2',l:'양수인(새 사장님) 연락처',t:'tel'},
+  ...F_CALLER,
+  {k:'transferDate',l:'승계(양도) 예정일',t:'date'},
+  {sec:'확인 사항 (직원용)',staff:1},
+  {k:'relation',l:'양도인·양수인 관계',t:'chips',o:['지인 승계','타인 승계','가족 승계','기타']},
+  {k:'posEdu',l:'포스 교육 필요',t:'chips',o:['필요','불필요','미확인']},
+  {k:'equipKeep',l:'장비',t:'chips',o:['그대로 사용','교체 희망','미확인']},
+  {sec:'양수인 안내 (신규와 동일)'},
+  {k:'bizType',l:'양수인 사업자 유형',t:'chips',o:['개인','개인 공동대표','법인']},
+  {k:'corpCode',l:'사업자번호 가운데 2자리 (4~5번째 숫자만)',t:'text',ph:'예: 81',show:v=>v.bizType==='법인'},
+  {k:'corpKind',l:'법인 종류',t:'chips',o:CORP_KINDS_A,show:v=>v.bizType==='법인'&&corpGroup(v.corpCode)==='A'},
+  {k:'corpKind',l:'기관 종류',t:'chips',o:CORP_KINDS_B,show:v=>v.bizType==='법인'&&corpGroup(v.corpCode)==='B',alt:1},
+  {k:'netDone',l:'인터넷 준비됨',t:'check',def:true},
+  {k:'elecDone',l:'전기·랜선 준비됨',t:'check',def:true},
+  {k:'interiorDone',l:'인테리어 완료',t:'check',def:true},
+  {k:'counterDone',l:'카운터 자리 있음',t:'check',def:true},
+  {k:'withDocs',l:'양수인 답장에 필요서류 목록 넣기',t:'check',def:true},
+],
+build(v,g){
+  let a='사장님, 사업장 양도 관련 안내드립니다.\n\n새 사장님이 사업자등록증을 받으시려면 기존 사업자의 폐업신고가 먼저 되어 있어야 합니다. 그래서 세무서에 "폐업예정신고"를 먼저 해 주셔야 합니다.\n\n폐업예정신고는 폐업하기로 한 날짜를 미리 정해서 폐업신고를 해 두는 것입니다.\n신청: 관할 세무서';
+  if(v.transferDate)a+='\n폐업 예정일: '+fmtDT(v.transferDate)+' (양도일 기준)';
+  a+='\n\n신고하시고 나서 연락 주시면 이후 절차 이어서 진행하겠습니다.';
+  const b=newReply(v,g,true);
+  return [{t:'양도인(기존 사장님) 답장',kind:'m',text:a},{t:'양수인(새 사장님) 답장',kind:'m',text:b}];
+},
+memo:v=>commonMemo(v,'사업자변경(승계)')+line('양수인 연락처',v.phone2)+line('승계 예정일',fmtDT(v.transferDate))+line('관계',v.relation)+line('포스 교육',v.posEdu)+line('장비',v.equipKeep)
+  +line('양수인 사업자 유형',v.bizType+(v.bizType==='법인'&&v.corpKind?' ('+v.corpKind+')':''))+'양도인 폐업예정신고 안내: O\n',
+missing:v=>[[v.relation,'양도·양수 관계'],[v.posEdu,'포스 교육 필요 여부'],[v.equipKeep,'장비 승계 여부'],[v.bizType,'양수인 사업자 유형']].filter(x=>!x[0]).map(x=>x[1]),
+};
+
+/* ===== 메모 헬퍼 ===== */
+const ox=b=>b?'O':'X';
+const line=(k,val)=>val?k+': '+val+'\n':'';
+function commonMemo(v,type){
+  return '['+type+'] '+todayStr()+'\n'+line('상호',v.name)+line('주소',v.addr)+line('연락 온 번호',v.phone)
+    +line('장비 모델',v.model)+(v.model!==undefined&&TYPES[cur].fields.some(f=>f.k==='photo')?'모델 사진: '+ox(v.photo)+'\n':'')
+    +line('발신자',[v.caller,v.callerName].filter(Boolean).join(' '));}
+function visitMemo(v){return line('방문 예정',fmtDT(v.visitAt))+line('오픈·마감·휴무',v.hours)+line('오픈 전 방문',v.beforeOpen)+(v.beforeOpen==='가능'?'비번·열쇠 확인: '+ox(v.pw)+'\n':'')+line('방문 불가',v.noVisit)+'업무일지: '+ox(v.ilji)+'\n';}
+function intakeMissing(v){return [[v.name,'상호'],[v.addr,'주소'],[v.phone,'연락 온 번호'],[v.model,'장비 모델명'],[v.photo,'모델 사진'],[v.caller,'발신자']].filter(x=>!x[0]).map(x=>x[1]);}
+function visitMissing(v){return [[v.hours,'오픈·마감·휴무'],[v.beforeOpen,'오픈 전 방문 여부'],[v.ilji,'업무일지']].filter(x=>!x[0]).map(x=>x[1]);}
+function co(key,label,g){return CO[key]?CO[key]:g('__co_'+key,label+' (회사 정보 설정)');}
+
+/* ===== 상태 (메모리에만) ===== */
+let cur='as';
+const STATE={};
+function defaults(t){const o={};TYPES[t].fields.forEach(f=>{if(f.k&&!(f.k in o))o[f.k]=f.def!==undefined?f.def:(f.t==='check'?false:'');});return o;}
+Object.keys(TYPES).forEach(t=>STATE[t]=defaults(t));
+
+/* ===== 렌더 ===== */
+function renderTypes(){
+  $('types').innerHTML=Object.keys(TYPES).map(t=>'<button type="button" class="type-btn'+(t===cur?' on':'')+'" data-t="'+t+'">'+TYPES[t].label+'<small>'+TYPES[t].sub+'</small></button>').join('');
+}
+function fieldHTML(f,i){
+  if(f.sec)return '<div class="sec'+(f.staff?' staff':'')+'" data-i="'+i+'">'+esc(f.sec)+'</div>';
+  if(f.info)return '<div class="info" data-i="'+i+'"></div>';
+  if(f.calc)return '<div class="calc f" data-i="'+i+'" id="calcBox"></div>';
+  const id='f_'+f.k+(f.alt?'_alt':'');const req=f.req?'<span class="req">*</span>':'';
+  let inner;
+  if(f.t==='chips')inner='<label class="l">'+esc(f.l)+req+'</label><div class="chips" data-k="'+f.k+'">'+f.o.map(o=>'<button type="button" class="chip" data-v="'+esc(o)+'">'+esc(o)+'</button>').join('')+'</div>';
+  else if(f.t==='check')inner='<label class="ck"><input type="checkbox" id="'+id+'" data-k="'+f.k+'"><span>'+esc(f.l)+req+'</span></label>';
+  else if(f.t==='textarea')inner='<label class="l" for="'+id+'">'+esc(f.l)+req+'</label><textarea id="'+id+'" data-k="'+f.k+'" autocomplete="off" placeholder="'+esc(f.ph||'')+'"></textarea>';
+  else inner='<label class="l" for="'+id+'">'+esc(f.l)+req+'</label><input type="'+(f.t==='number'?'number':f.t)+'" '+(f.t==='number'?'inputmode="numeric" min="0" ':'')+'id="'+id+'" data-k="'+f.k+'" autocomplete="off" placeholder="'+esc(f.ph||'')+'">';
+  if(f.hint)inner+='<div class="hint">'+esc(f.hint)+'</div>';
+  return '<div class="f" data-i="'+i+'">'+inner+'</div>';
+}
+function renderForm(){
+  const T=TYPES[cur];$('form').innerHTML=T.fields.map(fieldHTML).join('');
+  const v=STATE[cur];
+  $('form').querySelectorAll('[data-k]').forEach(el=>{const k=el.dataset.k;
+    if(el.classList.contains('chips'))return;
+    if(el.type==='checkbox')el.checked=!!v[k];else el.value=v[k]??'';});
+  update();
+}
+function update(){
+  const T=TYPES[cur],v=STATE[cur];
+  // 표시/숨김
+  T.fields.forEach((f,i)=>{const el=$('form').querySelector('[data-i="'+i+'"]');if(!el)return;
+    let vis=!f.show||f.show(v);
+    if(f.info){const r=f.info(v);vis=vis&&!!r;if(r){el.className='info '+r[0];el.innerHTML=r[1];}}
+    el.classList.toggle('hide',!vis);
+    if(f.t==='chips'){el.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.v===v[f.k]));}
+  });
+  // 섹션 제목: 다음 섹션 전까지 보이는 필드가 없으면 숨김
+  const kids=[...$('form').children];
+  kids.forEach((el,idx)=>{if(!el.classList.contains('sec'))return;const f=T.fields[+el.dataset.i];if(f.show&&!f.show(v)){el.classList.add('hide');return;}
+    let any=false;for(let j=idx+1;j<kids.length&&!kids[j].classList.contains('sec');j++)if(!kids[j].classList.contains('hide')){any=true;break;}
+    el.classList.toggle('hide',!any);});
+  // 위약금 계산 박스
+  const cb=$('calcBox');
+  if(cb){const c=calcPenalty(v);const ar=autoRemain(v);
+    const remEl=$('f_remain');if(remEl)remEl.placeholder=ar!=null?'자동: '+ar+'개월':'자동 (약정 시작일 필요)';
+    if(c.ok){const cms=+v.cms||0;
+      cb.innerHTML='월 '+won(+v.rent)+(c.exVat&&v.rentVat?' → 부가세 제외 <b>'+won(c.base)+'</b> (÷1.1, 폐업)':c.exVat?' (이미 부가세 제외 금액)':'')
+      +'<br>× 남은 '+c.months+'개월'+(c.auto?' (36개월 약정, 자동 계산)':' (직접 입력)')
+      +'<br>위약금 <span class="big">'+won(c.penalty)+'</span>'+(cms?'<br>+ CMS 미납 '+won(cms)+' = 합계 <b>'+won(c.penalty+cms)+'</b>':'');}
+    else cb.innerHTML='<span style="color:var(--text3)">월 임대료와 약정 시작일(또는 남은 개월)을 넣으면 위약금이 계산됩니다.</span>';}
+  // 승계 이동 버튼
+  const tb=$('toSuccession');if(tb)tb.onclick=()=>handoff('cancel','succ');
+  renderOut();
+}
+function renderOut(){
+  const T=TYPES[cur],v=STATE[cur];
+  const fill=[];const g=(k,label,fmt)=>{const val=v[k];if(val!==''&&val!=null&&val!==false&&!String(k).startsWith('__')){return fmt?fmt(val):String(val);}if(!fill.includes(label))fill.push(label);return 'OOO';};
+  let outs=T.build(v,g);
+  const pii=new Set();
+  outs=outs.map(o=>{findPII(o.text).forEach(x=>pii.add(x));return Object.assign({},o,{text:maskPII(o.text)});});
+  let memo=T.memo(v).trim();findPII(memo).forEach(x=>pii.add(x));memo=maskPII(memo);
+  const miss=T.missing(v);
+  // 경고
+  const w=[];
+  if(pii.size)w.push(['red','<b>'+[...pii].join('·')+'</b>로 보이는 숫자가 있어 자동으로 가렸어요. 답장에는 넣지 마세요.']);
+  const vd=(v.visitAt||'').slice(0,10);
+  if(vd&&vd===todayStr()&&((cur==='as'&&v.action==='방문 점검')||(cur==='swap'&&v.method==='방문 교체')))
+    w.push(['orange','<b>당일 방문 건</b>입니다. 카톡에만 올리지 말고 사무실에 사람 있으면 따로 말해 주세요.']);
+  $('warns').innerHTML=w.map(x=>'<div class="info '+x[0]+'">'+x[1]+'</div>').join('');
+  let h='';
+  outs.forEach((o,i)=>{
+    h+='<div class="out"><div class="out-head"><h3>'+esc(o.t)+'<span class="tag m">카톡용</span></h3><button type="button" class="btn btn-primary" data-copy="o'+i+'">복사</button></div>'
+     +'<pre class="txt" id="o'+i+'">'+esc(o.text).replace(/OOO/g,'<span class="oo">OOO</span>')+'</pre>'
+     +(i===outs.length-1&&fill.length?'<div class="fill">채울 것: '+esc(fill.join(', '))+'</div>':'')+'</div>';});
+  h+='<div class="out"><div class="out-head"><h3>업무방 접수 메모<span class="tag s">사내용</span></h3><button type="button" class="btn btn-ghost" data-copy="memo">복사</button></div>'
+   +'<pre class="txt" id="memo">'+esc(memo)+'</pre>'
+   +(miss.length?'<div class="miss">필수 빠짐: '+esc(miss.join(', '))+(['as','swap','cancel'].includes(cur)?' — 안 올리면 2차·3차 재확인, 추가 통화, 점주 불만이 생깁니다.':'')+'</div>':'')+'</div>';
+  $('outs').innerHTML=h;
+}
+function handoff(from,to){
+  const a=STATE[from],b=STATE[to];['name','addr','phone','caller','callerName','symptom','model','photo'].forEach(k=>{if(k in b&&a[k]!==undefined&&a[k]!==''&&!b[k])b[k]=a[k];});
+  setType(to);toast((TYPES[to].label)+'(으)로 이어서 작성');
+}
+function setType(t){cur=t;renderTypes();renderForm();window.scrollTo({top:$('types').getBoundingClientRect().top+window.scrollY-60,behavior:'smooth'});}
+
+/* ===== 이벤트 ===== */
+$('types').addEventListener('click',e=>{const b=e.target.closest('.type-btn');if(!b)return;
+  const t=b.dataset.t;
+  if(cur==='as'&&t==='swap'&&STATE.as.action==='교체 필요'){handoff('as','swap');return;}
+  setType(t);});
+$('form').addEventListener('input',e=>{const el=e.target;const k=el.dataset.k;if(!k)return;
+  STATE[cur][k]=el.type==='checkbox'?el.checked:el.value;update();});
+$('form').addEventListener('change',e=>{const el=e.target;const k=el.dataset.k;if(!k)return;
+  STATE[cur][k]=el.type==='checkbox'?el.checked:el.value;update();});
+$('form').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const k=c.parentElement.dataset.k;
+  STATE[cur][k]=STATE[cur][k]===c.dataset.v?'':c.dataset.v;update();});
+$('outs').addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(!b)return;copyText($(b.dataset.copy).innerText,b);});
+$('clearAll').addEventListener('click',()=>{Object.keys(TYPES).forEach(t=>STATE[t]=defaults(t));renderForm();toast('입력 내용을 모두 지웠어요');});
+function copyText(t,btn){
+  const done=()=>{toast('복사했어요');const o=btn.textContent;btn.textContent='복사됨 ✓';setTimeout(()=>btn.textContent=o,1200);};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,()=>fallback());}else fallback();
+  function fallback(){const ta=document.createElement('textarea');ta.value=t;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done();}catch(e){toast('복사 실패 — 길게 눌러 직접 복사하세요');}ta.remove();}
+}
+let tt;function toast(m){const el=$('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),1600);}
+
+/* 배너 */
+const bn=$('banner');if(lsGet(LS_BANNER)==='1')bn.open=false;
+function bannerLabel(){$('bannerToggle').textContent=bn.open?'접기 ▲':'펼치기 ▼';}
+bannerLabel();bn.addEventListener('toggle',()=>{lsSet(LS_BANNER,bn.open?'0':'1');bannerLabel();});
+
+/* 회사 정보 */
+function coState(){const s=$('setState');s.className='set-state '+(CO.addr&&CO.tel?'ok':'no');s.textContent=CO.addr&&CO.tel?'(설정됨)':'(회수 주소·연락처 미설정)';}
+['addr','tel'].forEach(k=>$('co_'+k).value=CO[k]||'');
+$('co_save').onclick=()=>{['addr','tel'].forEach(k=>CO[k]=$('co_'+k).value.trim());toast(lsSet(LS_CO,JSON.stringify(CO))?'이 기기에 저장했어요':'저장 실패 — 이번 화면에서만 사용됩니다');coState();update();};
+$('co_del').onclick=()=>{lsDel(LS_CO);CO={addr:'',tel:''};['addr','tel'].forEach(k=>$('co_'+k).value='');coState();update();toast('회사 정보를 지웠어요');};
+coState();
+
+$('jump').onclick=()=>$('outCard').scrollIntoView({behavior:'smooth'});
+if('IntersectionObserver' in window)new IntersectionObserver(es=>es.forEach(e=>$('jump').classList.toggle('hide',e.isIntersecting))).observe($('outCard'));
+renderTypes();renderForm();
+</script>
+</body>
+</html>
