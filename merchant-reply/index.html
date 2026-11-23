@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <title>가맹점 답장 초안</title>
 <style>
 :root{
@@ -41,9 +42,14 @@ details.settings summary::-webkit-details-marker{display:none;}
 .set-state{font-size:12px;font-weight:500;}
 .set-state.ok{color:var(--green);}.set-state.no{color:var(--orange);}
 /* 유형 */
-.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.type-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 6px;font-size:14px;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;}
+.types{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.type-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:10px 4px;font-size:13px;word-break:keep-all;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;}
 .type-btn small{display:block;font-size:11px;font-weight:500;color:var(--text3);margin-top:2px;}
+.type-btn.sel{border-color:var(--blue-mid);color:var(--blue);background:#f8fbff;}
+.call{border-color:var(--blue-mid);}
+#c_note{min-height:90px;}
+.fhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;font-weight:700;}
+.fhead .muted{font-weight:400;color:var(--text3);font-size:13px;}
 .type-btn.on{background:var(--blue-light);border-color:var(--blue);color:var(--blue);}
 /* 폼 */
 .layout{display:grid;grid-template-columns:1fr;gap:14px;}
@@ -76,7 +82,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--blue-mid);border
 .out{margin-bottom:14px;}
 .out-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;}
 .out-head h3{font-size:14px;font-weight:700;}
-.out-head .tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;margin-left:6px;}
+.out-head .tag{white-space:nowrap;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;margin-left:6px;}
 .tag.m{background:var(--blue-mid);color:var(--blue);}
 .tag.s{background:#ffedd5;color:var(--orange);}
 pre.txt{white-space:pre-wrap;word-break:break-all;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:inherit;font-size:14px;line-height:1.65;min-height:80px;}
@@ -89,25 +95,39 @@ pre.txt .oo{background:#fef3c7;color:#92400e;border-radius:3px;padding:0 2px;}
 .jump{position:fixed;right:14px;bottom:18px;z-index:200;box-shadow:0 4px 12px rgba(37,99,235,.35);border-radius:999px;padding:11px 16px;}
 @media(min-width:900px){.jump{display:none;}}
 .hide{display:none!important;}
+.rec{font-size:12px;margin-top:6px;line-height:1.5;}
+.rec.ok{color:var(--green);font-weight:600;}.rec.err{color:var(--red);font-weight:600;}.rec.wait{color:var(--text2);}.rec.info2{color:var(--text3);}
+.btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;}
+.out-head .btn{white-space:nowrap;}
 .footer{font-size:11px;color:var(--text3);text-align:center;padding:10px 0 30px;}
 </style>
 </head>
 <body>
 <nav class="nav">
   <div class="nav-brand"><div class="icon">💬</div><span>가맹점 답장 초안</span></div>
-  <button class="btn btn-ghost" id="clearAll" type="button">모두 지우기</button>
+  <button class="btn btn-ghost" id="clearAll" type="button">다음 통화 ↻</button>
 </nav>
 
 <div class="main">
   <details class="banner" id="banner" open>
     <summary><span>🔒 사내 전용 도구 — 꼭 읽어주세요</span><span id="bannerToggle">접기 ▲</span></summary>
     <ul>
-      <li>이 화면은 인터넷으로 아무것도 보내지 않습니다. 인터넷이 끊겨도 됩니다.</li>
-      <li>상호·주소·전화번호 등 입력한 내용은 <b>어디에도 저장되지 않고</b>, 새로고침하면 사라집니다.</li>
+      <li id="bnNet">이 화면은 인터넷으로 아무것도 보내지 않습니다. 인터넷이 끊겨도 됩니다.</li>
+      <li>상호·주소·전화번호 등 입력한 내용은 <b>이 기기에 저장되지 않고</b>, 새로고침하면 사라집니다.</li>
       <li>복사한 답장·업무 메모에는 실제 가맹점 정보가 들어가니 회사 밖으로 보내지 마세요.</li>
       <li>사업자번호·주민번호는 답장에 넣지 마세요. 들어가면 자동으로 가려집니다.</li>
     </ul>
   </details>
+
+  <div class="card call">
+    <div class="card-title">📞 통화 메모 <span class="sub">전화 받자마자 여기부터</span></div>
+    <div class="row2">
+      <div class="f"><label class="l" for="c_name">상호</label><input type="text" id="c_name" autocomplete="off" placeholder="여기 OO인데요"></div>
+      <div class="f"><label class="l" for="c_phone">연락 온 번호</label><input type="tel" id="c_phone" autocomplete="off"></div>
+    </div>
+    <div class="f"><label class="l" for="c_note">메모 (들은 대로)</label><textarea id="c_note" autocomplete="off" placeholder="예: 엠포스 영수증에 품목이 안 나옴 → 미리보기 체크 해제로 해결. 통화된 김에 단말기 느리다고 함"></textarea></div>
+    <div class="hint">유형은 통화하면서 또는 끝나고 골라도 되고, 안 골라도 기록할 수 있어요. 한 통화에 여러 건이면 유형을 여러 개 누르세요.</div>
+  </div>
 
   <div class="card">
     <details class="settings" id="settingsBox">
@@ -125,12 +145,31 @@ pre.txt .oo{background:#fef3c7;color:#92400e;border-radius:3px;padding:0 2px;}
   </div>
 
   <div class="card">
-    <div class="card-title">문의 유형</div>
+    <details class="settings" id="sheetBox">
+      <summary><span>📒 응대 기록 시트 연결 <span class="set-state" id="sheetState"></span></span><span class="sub" style="font-size:12px;color:var(--text3)">열기/닫기</span></summary>
+      <div style="margin-top:12px">
+        <div class="info blue">연결하면 메모의 「복사 + 시트 기록」을 누를 때 <b>내 구글시트로만</b> 한 줄이 저장됩니다. 웹 앱 주소·비밀키는 이 기기 브라우저에만 저장돼요. 시트 만드는 법은 <a href="apps-script.gs" target="_blank" rel="noopener">스크립트 파일</a> 맨 위 안내를 보세요.</div>
+        <div class="f"><label class="l" for="sh_url">웹 앱 URL (…/exec 로 끝나는 주소)</label><input type="text" id="sh_url" autocomplete="off" spellcheck="false" inputmode="url"></div>
+        <div class="f"><label class="l" for="sh_key">비밀키 (시트 설정 탭 B2)</label><input type="text" id="sh_key" autocomplete="off" spellcheck="false"></div>
+        <div class="f"><label class="l" for="sh_staff">담당 (기록에 남길 이름)</label><input type="text" id="sh_staff" autocomplete="off" placeholder="예: 지팀"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="sh_save" type="button">이 기기에 저장</button>
+          <button class="btn btn-ghost" id="sh_test" type="button">연결 테스트</button>
+          <button class="btn btn-ghost" id="sh_del" type="button">연결 끊기</button>
+        </div>
+        <div class="rec" id="sh_msg"></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <div class="card-title">문의 유형 <span class="sub">여러 개 선택 가능</span></div>
     <div class="types" id="types"></div>
   </div>
 
   <div class="layout">
     <div class="card">
+      <div id="formHead"></div>
       <form id="form" autocomplete="off" onsubmit="return false"></form>
     </div>
     <div class="out-col">
@@ -140,7 +179,7 @@ pre.txt .oo{background:#fef3c7;color:#92400e;border-radius:3px;padding:0 2px;}
       </div>
     </div>
   </div>
-  <div class="footer">스카이티제이 사내용 · 외부 통신 없음 · 가맹점 입력값 저장 안 함</div>
+  <div class="footer" id="footer">스카이티제이 사내용 · 외부 통신 없음 · 가맹점 입력값 저장 안 함</div>
 </div>
 <button type="button" class="btn btn-primary jump" id="jump">답장 보기 ↓</button>
 <div class="toast" id="toast"></div>
@@ -172,6 +211,8 @@ function findPII(t){const r=[];if(new RegExp(RE_RRN.source).test(t))r.push('주�
 function maskPII(t){return t.replace(RE_RRN,(a,p)=>p+'-*******').replace(RE_BIZ,(a,p1,p2,p3)=>/^0/.test(p1)?a:p1+'-**-*****');}
 
 /* ===== 공통 필드 묶음 ===== */
+const REMOTE_AS=['원격 처리 완료','메뉴변경 (원격)'];
+const needAddr=v=>!(cur==='as'&&REMOTE_AS.includes(v.action));
 const F_CALLER=[
   {k:'caller',l:'전화 발신자',t:'chips',o:['대표자','가족','직원','매니저','담당자','기타']},
   {k:'callerName',l:'발신자 이름',t:'text',ph:'예: 김OO 매니저'},
@@ -179,7 +220,7 @@ const F_CALLER=[
 const F_INTAKE=[
   {sec:'접수 필수 (업무방에 꼭 올릴 것)'},
   {k:'name',l:'① 상호',t:'text',req:1},
-  {k:'addr',l:'② 주소 (정확하게)',t:'text',req:1},
+  {k:'addr',l:'② 주소 (정확하게)',t:'text',req:v=>needAddr(v),hint:'원격 처리·메뉴변경처럼 방문이 필요 없는 건은 비워도 됩니다.'},
   {k:'phone',l:'③ 연락 온 번호',t:'tel',req:1},
   {k:'model',l:'④ 장비 모델명',t:'text',ph:'예: KCP-8800',req:1},
   {k:'photo',l:'장비 사진 받음',t:'check',req:1},
@@ -198,12 +239,32 @@ const FAULT_TEXT='점검 결과 침수·파손·낙하 등 사용 중 손상으�
 /* ===== 유형 정의 ===== */
 const TYPES={};
 
+/* --- 간단 문의 (단순 설정·사용법: 신입 교육·다른 직원 이어받기·"직원이 바꿨다" 근거) --- */
+TYPES.quick={label:'간단 문의',sub:'설정·사용법',fields:[
+  {info:()=>['blue','별거 아닌 문의도 남겨 두면 다른 직원이 이어서 응대할 수 있고, 나중에 "직원이 뭘 바꿨다"는 말에도 근거가 됩니다. <b>상호·문의·처리</b>만 적으면 돼요.']},
+  {k:'name',l:'상호',t:'text',req:1},
+  {k:'model',l:'장비·프로그램',t:'text',ph:'예: 엠포스, KCP-8800'},
+  {k:'question',l:'문의 내용',t:'textarea',req:1,ph:'예: 결제 후 영수증에 품목이 안 나와요'},
+  {k:'answer',l:'처리 내용',t:'textarea',req:1,ph:'예: 영수증 미리보기 "품목 안 나옴" 체크 해제 → 정상'},
+  {k:'phone',l:'연락 온 번호 (선택)',t:'tel'},
+  {k:'caller',l:'전화 발신자 (선택)',t:'chips',o:['대표자','가족','직원','매니저','담당자','기타']},
+  {k:'callerName',l:'발신자 이름 (선택)',t:'text'},
+],
+build(v,g){
+  let r='사장님, 문의하신 내용 처리했습니다.\n문의: '+g('question','문의 내용')+'\n처리: '+g('answer','처리 내용')+'\n\n다시 바꾸셔야 하거나 문제가 생기면 편하게 연락 주세요.';
+  return [{t:'가맹점 답장 (필요할 때만)',kind:'m',text:r}];
+},
+memo:v=>'[간단 문의] '+todayStr()+'\n'+line('상호',v.name)+line('장비·프로그램',v.model)+line('연락 온 번호',v.phone)+line('발신자',[v.caller,v.callerName].filter(Boolean).join(' '))
+  +line('문의',v.question)+line('처리',v.answer),
+missing:v=>[[v.name,'상호'],[v.question,'문의 내용'],[v.answer,'처리 내용']].filter(x=>!x[0]).map(x=>x[1]),
+};
+
 /* --- A/S --- */
 TYPES.as={label:'A/S 접수',sub:'고장·오류',fields:[
   ...F_INTAKE,
   {sec:'증상 및 처리'},
   {k:'symptom',l:'⑤ 증상',t:'textarea',req:1},
-  {k:'action',l:'처리',t:'chips',o:['원격 처리 완료','방문 점검','교체 필요']},
+  {k:'action',l:'처리',t:'chips',o:['원격 처리 완료','메뉴변경 (원격)','방문 점검','교체 필요']},
   {k:'actionNote',l:'처리 내용',t:'textarea',ph:'예: 통신 설정 재세팅 후 승인 테스트 정상'},
   {k:'visitAt',l:'방문 예정일시',t:'datetime-local',show:v=>v.action==='방문 점검'},
   {k:'extra',l:'추가 요청사항',t:'textarea'},
@@ -215,6 +276,7 @@ TYPES.as={label:'A/S 접수',sub:'고장·오류',fields:[
 build(v,g){
   const a=v.action||'';let act;
   if(a==='원격 처리 완료')act='원격 점검으로 처리 완료';
+  else if(a==='메뉴변경 (원격)')act='원격으로 메뉴 변경 완료';
   else if(a==='방문 점검')act='방문 점검 ('+g('visitAt','방문일시',fmtDT)+' 예정)';
   else if(a==='교체 필요')act='단말기 교체 필요 (일정 확인 후 안내)';
   else act=g('action','처리');
@@ -222,6 +284,7 @@ build(v,g){
   if(v.actionNote)r+='\n처리 내용: '+v.actionNote;
   r+='\n\n';
   if(a==='원격 처리 완료')r+='같은 증상이 다시 나타나면 바로 연락 주세요.';
+  else if(a==='메뉴변경 (원격)')r+='단말기에서 바뀐 메뉴 한 번 확인해 주시고, 더 바꾸실 게 있으면 편하게 연락 주세요.';
   else if(a==='방문 점검')r+='방문 전에 미리 연락드리겠습니다.';
   else r+='확인 후 바로 연락드리겠습니다.';
   if(v.fault)r+='\n\n'+FAULT_TEXT;
@@ -330,7 +393,7 @@ memo:v=>{const c=calcPenalty(v);
   +(c.ok?'위약금: '+won(c.base)+' × '+c.months+'개월 = '+won(c.penalty)+(c.exVat?' (폐업, 부가세 제외)':'')+'\n':'')
   +(v.cms!==''&&v.cms!=null?'CMS 미납: '+won(+v.cms||0)+(c.ok?' → 합계 '+won(c.penalty+(+v.cms||0)):'')+'\n':'')
   +'CMS 확인: '+ox(v.cmsChecked)+' / 업무방·수금방·엑셀 기록: '+ox(v.recorded)+'\n';},
-missing:v=>intakeMissing(v).concat([[v.reason,'철수 사유'],[v.returnHow,'반납 방식'],[v.route,'해지 경로'],[v.cmsChecked,'CMS 미납 확인'],[v.recorded,'업무방·수금방·엑셀 기록']].filter(x=>!x[0]).map(x=>x[1]))
+missing:v=>intakeMissing(v).concat([[v.caller,'발신자 신분'],[v.reason,'철수 사유'],[v.returnHow,'반납 방식'],[v.route,'해지 경로'],[v.cmsChecked,'CMS 미납 확인'],[v.recorded,'업무방·수금방·엑셀 기록']].filter(x=>!x[0]).map(x=>x[1]))
   .concat(v.reason==='폐업'&&!v.succession?['승계 여부 질문']:[]),
 };
 function monthsBetween(a,b){const x=new Date(a+'T00:00'),y=new Date(b+'T00:00');if(isNaN(x)||isNaN(y))return null;
@@ -367,7 +430,7 @@ build(v,g){
   return [{t:'가맹점 답장',kind:'m',text:r}];
 },
 memo:v=>commonMemo(v,'수수료 문의')+line('요지',v.kind)+line('카드사',v.card)+line('상세',v.detail)+'당사 확인 후 회신: '+ox(v.willCheck)+'\n',
-missing:v=>[[v.kind,'문의 요지'],[v.caller,'발신자']].filter(x=>!x[0]).map(x=>x[1]),
+missing:v=>[[v.kind,'문의 요지']].filter(x=>!x[0]).map(x=>x[1]),
 };
 
 /* --- 신규 --- */
@@ -509,25 +572,31 @@ function commonMemo(v,type){
     +line('장비 모델',v.model)+(v.model!==undefined&&TYPES[cur].fields.some(f=>f.k==='photo')?'모델 사진: '+ox(v.photo)+'\n':'')
     +line('발신자',[v.caller,v.callerName].filter(Boolean).join(' '));}
 function visitMemo(v){return line('방문 예정',fmtDT(v.visitAt))+line('오픈·마감·휴무',v.hours)+line('오픈 전 방문',v.beforeOpen)+(v.beforeOpen==='가능'?'비번·열쇠 확인: '+ox(v.pw)+'\n':'')+line('방문 불가',v.noVisit)+'업무일지: '+ox(v.ilji)+'\n';}
-function intakeMissing(v){return [[v.name,'상호'],[v.addr,'주소'],[v.phone,'연락 온 번호'],[v.model,'장비 모델명'],[v.photo,'모델 사진'],[v.caller,'발신자']].filter(x=>!x[0]).map(x=>x[1]);}
+function intakeMissing(v){return [[v.name,'상호'],[v.addr||!needAddr(v),'주소'],[v.phone,'연락 온 번호'],[v.model,'장비 모델명'],[v.photo,'모델 사진']].filter(x=>!x[0]).map(x=>x[1]);}
 function visitMissing(v){return [[v.hours,'오픈·마감·휴무'],[v.beforeOpen,'오픈 전 방문 여부'],[v.ilji,'업무일지']].filter(x=>!x[0]).map(x=>x[1]);}
 function co(key,label,g){return CO[key]?CO[key]:g('__co_'+key,label+' (회사 정보 설정)');}
 
 /* ===== 상태 (메모리에만) ===== */
-let cur='as';
+let cur=null;          // 지금 상세를 쓰는 유형
+let SEL=[];            // 이번 통화에 켠 유형 (순서 = 켠 순서)
+function newCall(){return {name:'',phone:'',note:'',rid:'',slots:{},rec:null,recSig:null,sentName:null};}
+let CALL=newCall();
+// 다른 유형의 메모·필수 확인을 계산할 때 cur 를 잠깐 바꿔 쓴다 (commonMemo·needAddr 가 cur 를 봄)
+function withCur(t,fn){const c=cur;cur=t;try{return fn();}finally{cur=c;}}
+function syncCall(){Object.keys(TYPES).forEach(t=>{STATE[t].name=CALL.name;STATE[t].phone=CALL.phone;});}
 const STATE={};
 function defaults(t){const o={};TYPES[t].fields.forEach(f=>{if(f.k&&!(f.k in o))o[f.k]=f.def!==undefined?f.def:(f.t==='check'?false:'');});return o;}
 Object.keys(TYPES).forEach(t=>STATE[t]=defaults(t));
 
 /* ===== 렌더 ===== */
 function renderTypes(){
-  $('types').innerHTML=Object.keys(TYPES).map(t=>'<button type="button" class="type-btn'+(t===cur?' on':'')+'" data-t="'+t+'">'+TYPES[t].label+'<small>'+TYPES[t].sub+'</small></button>').join('');
+  $('types').innerHTML=Object.keys(TYPES).map(t=>'<button type="button" class="type-btn'+(SEL.includes(t)?' sel':'')+(t===cur?' on':'')+'" data-t="'+t+'">'+(SEL.includes(t)?'✓ ':'')+TYPES[t].label+'<small>'+TYPES[t].sub+'</small></button>').join('');
 }
 function fieldHTML(f,i){
   if(f.sec)return '<div class="sec'+(f.staff?' staff':'')+'" data-i="'+i+'">'+esc(f.sec)+'</div>';
   if(f.info)return '<div class="info" data-i="'+i+'"></div>';
   if(f.calc)return '<div class="calc f" data-i="'+i+'" id="calcBox"></div>';
-  const id='f_'+f.k+(f.alt?'_alt':'');const req=f.req?'<span class="req">*</span>':'';
+  const id='f_'+f.k+(f.alt?'_alt':'');const req=f.req?'<span class="req"'+(typeof f.req==='function'?' data-req="'+i+'"':'')+'>*</span>':'';
   let inner;
   if(f.t==='chips')inner='<label class="l">'+esc(f.l)+req+'</label><div class="chips" data-k="'+f.k+'">'+f.o.map(o=>'<button type="button" class="chip" data-v="'+esc(o)+'">'+esc(o)+'</button>').join('')+'</div>';
   else if(f.t==='check')inner='<label class="ck"><input type="checkbox" id="'+id+'" data-k="'+f.k+'"><span>'+esc(f.l)+req+'</span></label>';
@@ -536,8 +605,12 @@ function fieldHTML(f,i){
   if(f.hint)inner+='<div class="hint">'+esc(f.hint)+'</div>';
   return '<div class="f" data-i="'+i+'">'+inner+'</div>';
 }
+const CALL_KEYS=['name','phone']; // 통화 메모 칸에서 받으므로 유형 폼에서는 숨김
 function renderForm(){
-  const T=TYPES[cur];$('form').innerHTML=T.fields.map(fieldHTML).join('');
+  if(!cur){$('formHead').innerHTML='<div class="fhead"><span class="muted">유형을 고르면 상세 칸이 여기 나와요. 안 골라도 오른쪽(아래) 메모로 기록할 수 있어요.</span></div>';$('form').innerHTML='';update();return;}
+  const T=TYPES[cur];
+  $('formHead').innerHTML='<div class="fhead"><span>'+esc(T.label)+' 상세'+(SEL.length>1?' <span class="muted">('+(SEL.indexOf(cur)+1)+'/'+SEL.length+')</span>':'')+'</span><button type="button" class="btn btn-ghost" id="dropType">이 건 빼기</button></div>';
+  $('form').innerHTML=T.fields.map((f,i)=>CALL_KEYS.includes(f.k)?'':fieldHTML(f,i)).join('');
   const v=STATE[cur];
   $('form').querySelectorAll('[data-k]').forEach(el=>{const k=el.dataset.k;
     if(el.classList.contains('chips'))return;
@@ -545,6 +618,8 @@ function renderForm(){
   update();
 }
 function update(){
+  syncCall();
+  if(!cur){renderOut();return;}
   const T=TYPES[cur],v=STATE[cur];
   // 표시/숨김
   T.fields.forEach((f,i)=>{const el=$('form').querySelector('[data-i="'+i+'"]');if(!el)return;
@@ -553,6 +628,7 @@ function update(){
     el.classList.toggle('hide',!vis);
     if(f.t==='chips'){el.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.v===v[f.k]));}
   });
+  $('form').querySelectorAll('[data-req]').forEach(el=>el.classList.toggle('hide',!T.fields[+el.dataset.req].req(v)));
   // 섹션 제목: 다음 섹션 전까지 보이는 필드가 없으면 숨김
   const kids=[...$('form').children];
   kids.forEach((el,idx)=>{if(!el.classList.contains('sec'))return;const f=T.fields[+el.dataset.i];if(f.show&&!f.show(v)){el.classList.add('hide');return;}
@@ -571,19 +647,24 @@ function update(){
   const tb=$('toSuccession');if(tb)tb.onclick=()=>handoff('cancel','succ');
   renderOut();
 }
+function callMemo(){
+  let m='접수번호 '+CALL.rid+'\n';
+  if(!SEL.length)m+='[통화 메모] '+todayStr()+'\n'+line('상호',CALL.name)+line('연락 온 번호',CALL.phone)+line('메모',CALL.note);
+  else{if(CALL.note)m+='통화 메모: '+CALL.note+'\n';m+=SEL.map(t=>withCur(t,()=>TYPES[t].memo(STATE[t])).trim()).join('\n\n');}
+  return m.trim();}
 function renderOut(){
-  const T=TYPES[cur],v=STATE[cur];
-  const fill=[];const g=(k,label,fmt)=>{const val=v[k];if(val!==''&&val!=null&&val!==false&&!String(k).startsWith('__')){return fmt?fmt(val):String(val);}if(!fill.includes(label))fill.push(label);return 'OOO';};
-  let outs=T.build(v,g);
-  const pii=new Set();
-  outs=outs.map(o=>{findPII(o.text).forEach(x=>pii.add(x));return Object.assign({},o,{text:maskPII(o.text)});});
-  let memo=T.memo(v).trim();findPII(memo).forEach(x=>pii.add(x));memo=maskPII(memo);
-  const miss=T.missing(v);
-  // 경고
+  if(!CALL.rid)CALL.rid=newRid();
+  const fill=[],pii=new Set();let outs=[];
+  if(cur){const v=STATE[cur];const g=(k,label,fmt)=>{const val=v[k];if(val!==''&&val!=null&&val!==false&&!String(k).startsWith('__')){return fmt?fmt(val):String(val);}if(!fill.includes(label))fill.push(label);return 'OOO';};
+    outs=TYPES[cur].build(v,g).map(o=>{findPII(o.text).forEach(x=>pii.add(x));return Object.assign({},o,{text:maskPII(o.text)});});}
+  let memo=callMemo();findPII(memo).forEach(x=>pii.add(x));memo=maskPII(memo);
+  // 필수 빠짐: 상호·번호는 한 번만, 나머지는 유형 이름을 붙여서
+  const miss=[];const seen=new Set();
+  if(!CALL.name){miss.push('상호');seen.add('상호');}
+  SEL.forEach(t=>withCur(t,()=>TYPES[t].missing(STATE[t])).forEach(x=>{if(x==='상호'||x==='연락 온 번호'){if(!seen.has(x)){seen.add(x);miss.push(x);}}else miss.push((SEL.length>1?TYPES[t].label+': ':'')+x);}));
   const w=[];
   if(pii.size)w.push(['red','<b>'+[...pii].join('·')+'</b>로 보이는 숫자가 있어 자동으로 가렸어요. 답장에는 넣지 마세요.']);
-  const vd=(v.visitAt||'').slice(0,10);
-  if(vd&&vd===todayStr()&&((cur==='as'&&v.action==='방문 점검')||(cur==='swap'&&v.method==='방문 교체')))
+  if(SEL.some(t=>{const v=STATE[t];const vd=(v.visitAt||'').slice(0,10);return vd&&vd===todayStr()&&((t==='as'&&v.action==='방문 점검')||(t==='swap'&&v.method==='방문 교체'));}))
     w.push(['orange','<b>당일 방문 건</b>입니다. 카톡에만 올리지 말고 사무실에 사람 있으면 따로 말해 주세요.']);
   $('warns').innerHTML=w.map(x=>'<div class="info '+x[0]+'">'+x[1]+'</div>').join('');
   let h='';
@@ -591,30 +672,43 @@ function renderOut(){
     h+='<div class="out"><div class="out-head"><h3>'+esc(o.t)+'<span class="tag m">카톡용</span></h3><button type="button" class="btn btn-primary" data-copy="o'+i+'">복사</button></div>'
      +'<pre class="txt" id="o'+i+'">'+esc(o.text).replace(/OOO/g,'<span class="oo">OOO</span>')+'</pre>'
      +(i===outs.length-1&&fill.length?'<div class="fill">채울 것: '+esc(fill.join(', '))+'</div>':'')+'</div>';});
-  h+='<div class="out"><div class="out-head"><h3>업무방 접수 메모<span class="tag s">사내용</span></h3><button type="button" class="btn btn-ghost" data-copy="memo">복사</button></div>'
-   +'<pre class="txt" id="memo">'+esc(memo)+'</pre>'
-   +(miss.length?'<div class="miss">필수 빠짐: '+esc(miss.join(', '))+(['as','swap','cancel'].includes(cur)?' — 안 올리면 2차·3차 재확인, 추가 통화, 점주 불만이 생깁니다.':'')+'</div>':'')+'</div>';
+  const on=sheetOn();
+  h+='<div class="out"><div class="out-head"><h3>업무방 접수 메모<span class="tag s">사내용</span></h3><div class="btns">'
+   +(on?'<button type="button" class="btn btn-primary" id="recBtn">복사 + 시트 기록</button>'
+       :'<button type="button" class="btn btn-ghost" data-copy="memo">업무방용 복사</button><button type="button" class="btn btn-ghost" id="tsvBtn">시트용 한 줄 복사</button>')
+   +'</div></div>'
+   +'<pre class="txt" id="memo">'+esc(memo)+'</pre>'+recHTML(on)
+   +(miss.length?'<div class="miss">필수 빠짐: '+esc(miss.join(', '))+(SEL.some(t=>['as','swap','cancel'].includes(t))?' — 안 올리면 2차·3차 재확인, 추가 통화, 점주 불만이 생깁니다.':'')+'</div>':'')+'</div>';
   $('outs').innerHTML=h;
 }
 function handoff(from,to){
   const a=STATE[from],b=STATE[to];['name','addr','phone','caller','callerName','symptom','model','photo'].forEach(k=>{if(k in b&&a[k]!==undefined&&a[k]!==''&&!b[k])b[k]=a[k];});
   setType(to);toast((TYPES[to].label)+'(으)로 이어서 작성');
 }
-function setType(t){cur=t;renderTypes();renderForm();window.scrollTo({top:$('types').getBoundingClientRect().top+window.scrollY-60,behavior:'smooth'});}
+function setType(t){if(!SEL.includes(t))SEL.push(t);cur=t;renderTypes();renderForm();window.scrollTo({top:$('types').getBoundingClientRect().top+window.scrollY-60,behavior:'smooth'});}
 
 /* ===== 이벤트 ===== */
 $('types').addEventListener('click',e=>{const b=e.target.closest('.type-btn');if(!b)return;
   const t=b.dataset.t;
-  if(cur==='as'&&t==='swap'&&STATE.as.action==='교체 필요'){handoff('as','swap');return;}
+  if(cur==='as'&&t==='swap'&&STATE.as.action==='교체 필요'&&!SEL.includes('swap')){handoff('as','swap');return;}
   setType(t);});
+function dropType(t){SEL=SEL.filter(x=>x!==t);STATE[t]=defaults(t);cur=SEL[SEL.length-1]||null;renderTypes();renderForm();
+  toast(TYPES[t].label+' 건을 뺐어요'+(CALL.rec?' (이미 시트에 들어간 줄은 시트에서 상태를 보류로)':''));}
+$('formHead').addEventListener('click',e=>{if(e.target.closest('#dropType')&&cur)dropType(cur);});
+['name','phone','note'].forEach(k=>$('c_'+k).addEventListener('input',e=>{CALL[k]=e.target.value;update();}));
 $('form').addEventListener('input',e=>{const el=e.target;const k=el.dataset.k;if(!k)return;
   STATE[cur][k]=el.type==='checkbox'?el.checked:el.value;update();});
 $('form').addEventListener('change',e=>{const el=e.target;const k=el.dataset.k;if(!k)return;
-  STATE[cur][k]=el.type==='checkbox'?el.checked:el.value;update();});
+  const nv=el.type==='checkbox'?el.checked:el.value;if(STATE[cur][k]===nv)return; // 이미 input 으로 반영됨 → 다시 그리면 누른 버튼이 사라짐
+  STATE[cur][k]=nv;update();});
 $('form').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const k=c.parentElement.dataset.k;
   STATE[cur][k]=STATE[cur][k]===c.dataset.v?'':c.dataset.v;update();});
-$('outs').addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(!b)return;copyText($(b.dataset.copy).innerText,b);});
-$('clearAll').addEventListener('click',()=>{Object.keys(TYPES).forEach(t=>STATE[t]=defaults(t));renderForm();toast('입력 내용을 모두 지웠어요');});
+$('outs').addEventListener('click',e=>{
+  if(e.target.closest('#recBtn')){recordNow();return;}
+  const tb=e.target.closest('#tsvBtn');if(tb){copyText(tsvLines($('memo').innerText),tb);return;}
+  const b=e.target.closest('[data-copy]');if(!b)return;copyText($(b.dataset.copy).innerText,b);});
+$('clearAll').addEventListener('click',()=>{Object.keys(TYPES).forEach(t=>STATE[t]=defaults(t));SEL=[];cur=null;CALL=newCall();
+  ['name','phone','note'].forEach(k=>$('c_'+k).value='');renderTypes();renderForm();toast('다음 통화 — 새 접수번호로 시작해요');$('c_name').focus();});
 function copyText(t,btn){
   const done=()=>{toast('복사했어요');const o=btn.textContent;btn.textContent='복사됨 ✓';setTimeout(()=>btn.textContent=o,1200);};
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,()=>fallback());}else fallback();
@@ -622,6 +716,88 @@ function copyText(t,btn){
     try{document.execCommand('copy');done();}catch(e){toast('복사 실패 — 길게 눌러 직접 복사하세요');}ta.remove();}
 }
 let tt;function toast(m){const el=$('toast');el.textContent=m;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),1600);}
+
+/* ===== 응대 기록 시트 (설정한 기기에서, 버튼 누를 때만 통신) ===== */
+const LS_SHEET='mr_sheet_v1';
+let SH={url:'',key:'',staff:''};
+try{const s=JSON.parse(lsGet(LS_SHEET)||'null');if(s)SH=Object.assign(SH,s);}catch(e){}
+const RE_EXEC=/^https:\/\/script\.google\.com\/(?:a\/macros\/[\w.-]+\/|macros\/)s\/[\w-]+\/exec$/;
+function sheetOn(){return RE_EXEC.test(SH.url)&&!!SH.key;}
+function newRid(){const d=new Date(),p=n=>String(n).padStart(2,'0'),c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let x='';for(let i=0;i<2;i++)x+=c[Math.floor(Math.random()*c.length)];
+  return String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+'-'+x;}
+const TYPE_SHORT={quick:'간단',as:'A/S',swap:'교체',cancel:'해지',fee:'수수료',newm:'신규',succ:'승계'};
+const jn=(...a)=>a.filter(Boolean).join(' / ');
+// 시트 1줄 (열 순서는 apps-script.gs 의 COLS 와 같아야 함)
+function sheetRow(t,v,memo){
+  const r={id:v.__rid,type:TYPE_SHORT[t],name:v.name,addr:v.addr,phone:v.phone,caller:[v.caller,v.callerName].filter(Boolean).join(' '),model:v.model,
+    main:'',sub:'',visit:'',fault:'',penalty:'',succ:'',sugeum:'',staff:SH.staff,memo:memo};
+  const fault=()=>{r.fault=v.fault?'O':'';r.sugeum=v.fault?ox(v.sugeum):'';};
+  if(t==='quick'){r.main=v.question;r.sub=v.answer;}
+  else if(t==='as'){r.main=v.symptom;r.sub=jn(v.action,v.actionNote,v.extra);r.visit=v.action==='방문 점검'?fmtDT(v.visitAt):'';fault();}
+  else if(t==='swap'){r.main=v.symptom;r.sub=jn(v.method,v.extra);r.visit=v.method==='방문 교체'?fmtDT(v.visitAt):'';fault();}
+  else if(t==='cancel'){const c=calcPenalty(v);r.main=v.reason;r.sub=jn(v.reasonDetail,v.cancelDate&&'해지희망 '+fmtDT(v.cancelDate),v.returnHow,v.route&&'경로 '+v.route);
+    r.visit=v.returnHow==='방문 회수'?v.visitWindow:'';r.penalty=c.ok?Math.round(c.penalty):'';r.succ=v.reason==='폐업'?(v.succession||'미확인'):'';r.sugeum=ox(v.recorded);}
+  else if(t==='fee'){r.main=v.kind;r.sub=jn(v.card,v.detail);}
+  else if(t==='newm'){r.main=v.source;r.sub=jn(v.cardMember&&'카드가맹 '+v.cardMember,(v.bizType||'')+(v.bizType==='법인'&&v.corpKind?' ('+v.corpKind+')':''),v.openDate&&'오픈 '+fmtDT(v.openDate));r.visit=v.visitWindow;}
+  else if(t==='succ'){r.main=v.relation;r.sub=jn(v.posEdu&&'포스교육 '+v.posEdu,v.equipKeep&&'장비 '+v.equipKeep,v.transferDate&&'승계일 '+fmtDT(v.transferDate));}
+  Object.keys(r).forEach(k=>{if(r[k]==null)r[k]='';if(typeof r[k]==='string')r[k]=maskPII(r[k]);});
+  return r;}
+// 이번 통화의 시트 줄들: 유형 없으면 '메모' 1줄, 있으면 켠 유형마다 1줄 (첫 건 = 접수번호, 다음 건 = 접수번호-2 …)
+function slotId(t){if(!(t in CALL.slots))CALL.slots[t]=Object.keys(CALL.slots).length+1;const n=CALL.slots[t];return n===1?CALL.rid:CALL.rid+'-'+n;}
+function callRows(memo){
+  if(!SEL.length){const r={id:CALL.rid,type:'메모',name:CALL.name,addr:'',phone:CALL.phone,caller:'',model:'',main:CALL.note,sub:'',visit:'',fault:'',penalty:'',succ:'',sugeum:'',staff:SH.staff,memo:memo};
+    Object.keys(r).forEach(k=>{if(typeof r[k]==='string')r[k]=maskPII(r[k]);});return [r];}
+  return SEL.map(t=>{const r=withCur(t,()=>sheetRow(t,STATE[t],memo));r.id=slotId(t);return r;});}
+function tsvLines(memo){const d=new Date(),p=n=>String(n).padStart(2,'0');
+  const at=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+  return callRows(memo).map(r=>[r.id,at,r.type,r.name,r.addr,r.phone,r.caller,r.model,r.main,r.sub,r.visit,r.fault,r.penalty,r.succ,r.sugeum,'접수','',r.staff,r.memo,'']
+    .map(x=>String(x).replace(/[\t\r\n]+/g,' / ').replace(/^([=+@])/,' $1')).join('\t')).join('\n');}
+const rowSig=()=>JSON.stringify(callRows('').map(r=>{delete r.memo;return r;}));
+function recHTML(on){
+  const st=CALL.rec;let h='';
+  if(st){h+='<div class="rec '+st.s+'">'+esc(st.m)+'</div>';
+    if(st.s==='ok'&&CALL.recSig!==rowSig())h+='<div class="rec info2">기록 뒤에 내용이 바뀌었어요. 다시 누르면 같은 접수번호 줄이 고쳐지고, 새로 켠 유형은 줄이 추가됩니다. 다른 가맹점 전화면 「다음 통화」를 누르세요.</div>';
+    if(st.s==='err')h+='<div class="btns" style="justify-content:flex-start;margin-top:6px"><button type="button" class="btn btn-ghost" id="tsvBtn">시트용 한 줄 복사</button></div>';}
+  else if(!on)h+='<div class="rec info2">시트 연결 전이에요. 「시트용 한 줄 복사」 후 응대기록 시트 맨 아래 빈 줄의 A칸에 붙여넣으면 건마다 한 줄씩 들어갑니다.</div>';
+  return h;}
+async function postSheet(body){
+  const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),15000);
+  try{const r=await fetch(SH.url,{method:'POST',body:JSON.stringify(Object.assign({key:SH.key},body)),credentials:'omit',cache:'no-store',redirect:'follow',signal:ac.signal});
+    const tx=await r.text();try{return JSON.parse(tx);}catch(e){return {ok:false,error:'bad_response'};}}
+  finally{clearTimeout(tm);}}
+function errMsg(c){return c==='bad_key'?'비밀키가 맞지 않아요. 시트 설정 탭 B2 값을 다시 넣어 주세요.'
+  :c==='no_sheet'?"시트에 '응대기록' 탭이 없어요. Apps Script 에서 setup 을 다시 실행하세요."
+  :c==='bad_response'?'시트 응답을 읽지 못했어요. 웹 앱 배포의 액세스 권한이 "모든 사용자"인지 확인하세요.'
+  :'시트 기록 실패 ('+(c||'알 수 없음')+')';}
+async function recordNow(){
+  if(CALL.sentName!=null&&CALL.name!==CALL.sentName){CALL.rid=newRid();CALL.slots={};CALL.rec=null;CALL.sentName=null;}
+  renderOut();
+  const memo=$('memo').innerText;
+  copyText(memo,$('recBtn'));
+  const call=CALL,rows=callRows(memo);
+  call.rec={s:'wait',m:'업무방용 메모를 복사했고, 시트에 기록하는 중…'};renderOut();
+  try{const j=await postSheet({rows});
+    if(j&&j.ok){const rs=j.results||[j];const up=rs.filter(x=>x.updated).length,nw=rs.length-up;
+      call.rec={s:'ok',m:'시트 '+[nw?nw+'줄 추가':'',up?up+'줄 수정':''].filter(Boolean).join(', ')+' ✓ 접수번호 '+call.rid};call.sentName=call.name;call.recSig=rowSig();}
+    else call.rec={s:'err',m:errMsg(j&&j.error)};}
+  catch(e){call.rec={s:'err',m:'시트 기록 실패 — 인터넷 연결이나 회사 PC 차단을 확인하세요. 메모는 복사됐으니 아래 「시트용 한 줄 복사」로 붙여넣어도 됩니다.'};}
+  if(CALL===call)renderOut();}
+function sheetUI(){
+  const on=sheetOn(),s=$('sheetState');s.className='set-state '+(on?'ok':'no');s.textContent=on?'(연결됨)':'(연결 안 함)';
+  $('bnNet').innerHTML=on?'응대 기록 시트가 연결돼 있어요. <b>「복사 + 시트 기록」을 누를 때만</b> 내 구글시트로 한 줄을 보냅니다. 그 밖에는 인터넷으로 아무것도 보내지 않습니다.'
+    :'이 화면은 인터넷으로 아무것도 보내지 않습니다. 인터넷이 끊겨도 됩니다.';
+  $('footer').textContent='스카이티제이 사내용 · '+(on?'시트 기록 버튼을 누를 때만 내 구글시트로 전송':'외부 통신 없음')+' · 가맹점 입력값 기기에 저장 안 함';}
+['url','key','staff'].forEach(k=>$('sh_'+k).value=SH[k]||'');
+function shMsg(c,m){const el=$('sh_msg');el.className='rec '+c;el.textContent=m;}
+$('sh_save').onclick=()=>{const n={url:$('sh_url').value.trim(),key:$('sh_key').value.trim(),staff:$('sh_staff').value.trim()};
+  if(n.url&&!RE_EXEC.test(n.url)){shMsg('err','웹 앱 URL 형식이 아니에요. script.google.com 으로 시작하고 /exec 로 끝나는 주소를 넣어 주세요.');return;}
+  SH=n;const ok=lsSet(LS_SHEET,JSON.stringify(SH));shMsg(ok?'ok':'err',ok?'이 기기에 저장했어요. 「연결 테스트」로 확인해 보세요.':'저장 실패 — 이번 화면에서만 사용됩니다');sheetUI();update();};
+$('sh_test').onclick=async()=>{if(!sheetOn()){shMsg('err','먼저 웹 앱 URL 과 비밀키를 넣고 저장하세요.');return;}
+  shMsg('wait','확인 중…');
+  try{const j=await postSheet({ping:true});j&&j.ok?shMsg('ok','연결됐어요 ✓ 시트: '+(j.sheet||'')):shMsg('err',errMsg(j&&j.error));}
+  catch(e){shMsg('err','연결 실패 — URL·인터넷·회사 PC 차단을 확인하세요.');}};
+$('sh_del').onclick=()=>{lsDel(LS_SHEET);SH={url:'',key:'',staff:''};['url','key','staff'].forEach(k=>$('sh_'+k).value='');shMsg('info2','연결을 끊었어요. 이제 인터넷으로 아무것도 보내지 않습니다.');sheetUI();update();};
+sheetUI();
 
 /* 배너 */
 const bn=$('banner');if(lsGet(LS_BANNER)==='1')bn.open=false;
