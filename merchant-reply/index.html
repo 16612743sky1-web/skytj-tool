@@ -45,6 +45,11 @@ details.settings summary::-webkit-details-marker{display:none;}
 .types{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
 .type-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:10px 4px;font-size:13px;word-break:keep-all;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;}
 .type-btn small{display:block;font-size:11px;font-weight:500;color:var(--text3);margin-top:2px;}
+.type-btn.sel{border-color:var(--blue-mid);color:var(--blue);background:#f8fbff;}
+.call{border-color:var(--blue-mid);}
+#c_note{min-height:90px;}
+.fhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;font-weight:700;}
+.fhead .muted{font-weight:400;color:var(--text3);font-size:13px;}
 .type-btn.on{background:var(--blue-light);border-color:var(--blue);color:var(--blue);}
 /* 폼 */
 .layout{display:grid;grid-template-columns:1fr;gap:14px;}
@@ -100,7 +105,7 @@ pre.txt .oo{background:#fef3c7;color:#92400e;border-radius:3px;padding:0 2px;}
 <body>
 <nav class="nav">
   <div class="nav-brand"><div class="icon">💬</div><span>가맹점 답장 초안</span></div>
-  <button class="btn btn-ghost" id="clearAll" type="button">모두 지우기</button>
+  <button class="btn btn-ghost" id="clearAll" type="button">다음 통화 ↻</button>
 </nav>
 
 <div class="main">
@@ -113,6 +118,16 @@ pre.txt .oo{background:#fef3c7;color:#92400e;border-radius:3px;padding:0 2px;}
       <li>사업자번호·주민번호는 답장에 넣지 마세요. 들어가면 자동으로 가려집니다.</li>
     </ul>
   </details>
+
+  <div class="card call">
+    <div class="card-title">📞 통화 메모 <span class="sub">전화 받자마자 여기부터</span></div>
+    <div class="row2">
+      <div class="f"><label class="l" for="c_name">상호</label><input type="text" id="c_name" autocomplete="off" placeholder="여기 OO인데요"></div>
+      <div class="f"><label class="l" for="c_phone">연락 온 번호</label><input type="tel" id="c_phone" autocomplete="off"></div>
+    </div>
+    <div class="f"><label class="l" for="c_note">메모 (들은 대로)</label><textarea id="c_note" autocomplete="off" placeholder="예: 엠포스 영수증에 품목이 안 나옴 → 미리보기 체크 해제로 해결. 통화된 김에 단말기 느리다고 함"></textarea></div>
+    <div class="hint">유형은 통화하면서 또는 끝나고 골라도 되고, 안 골라도 기록할 수 있어요. 한 통화에 여러 건이면 유형을 여러 개 누르세요.</div>
+  </div>
 
   <div class="card">
     <details class="settings" id="settingsBox">
@@ -148,12 +163,13 @@ pre.txt .oo{background:#fef3c7;color:#92400e;border-radius:3px;padding:0 2px;}
   </div>
 
   <div class="card">
-    <div class="card-title">문의 유형</div>
+    <div class="card-title">문의 유형 <span class="sub">여러 개 선택 가능</span></div>
     <div class="types" id="types"></div>
   </div>
 
   <div class="layout">
     <div class="card">
+      <div id="formHead"></div>
       <form id="form" autocomplete="off" onsubmit="return false"></form>
     </div>
     <div class="out-col">
@@ -561,14 +577,20 @@ function visitMissing(v){return [[v.hours,'오픈·마감·휴무'],[v.beforeOpe
 function co(key,label,g){return CO[key]?CO[key]:g('__co_'+key,label+' (회사 정보 설정)');}
 
 /* ===== 상태 (메모리에만) ===== */
-let cur='quick';
+let cur=null;          // 지금 상세를 쓰는 유형
+let SEL=[];            // 이번 통화에 켠 유형 (순서 = 켠 순서)
+function newCall(){return {name:'',phone:'',note:'',rid:'',slots:{},rec:null,recSig:null,sentName:null};}
+let CALL=newCall();
+// 다른 유형의 메모·필수 확인을 계산할 때 cur 를 잠깐 바꿔 쓴다 (commonMemo·needAddr 가 cur 를 봄)
+function withCur(t,fn){const c=cur;cur=t;try{return fn();}finally{cur=c;}}
+function syncCall(){Object.keys(TYPES).forEach(t=>{STATE[t].name=CALL.name;STATE[t].phone=CALL.phone;});}
 const STATE={};
 function defaults(t){const o={};TYPES[t].fields.forEach(f=>{if(f.k&&!(f.k in o))o[f.k]=f.def!==undefined?f.def:(f.t==='check'?false:'');});return o;}
 Object.keys(TYPES).forEach(t=>STATE[t]=defaults(t));
 
 /* ===== 렌더 ===== */
 function renderTypes(){
-  $('types').innerHTML=Object.keys(TYPES).map(t=>'<button type="button" class="type-btn'+(t===cur?' on':'')+'" data-t="'+t+'">'+TYPES[t].label+'<small>'+TYPES[t].sub+'</small></button>').join('');
+  $('types').innerHTML=Object.keys(TYPES).map(t=>'<button type="button" class="type-btn'+(SEL.includes(t)?' sel':'')+(t===cur?' on':'')+'" data-t="'+t+'">'+(SEL.includes(t)?'✓ ':'')+TYPES[t].label+'<small>'+TYPES[t].sub+'</small></button>').join('');
 }
 function fieldHTML(f,i){
   if(f.sec)return '<div class="sec'+(f.staff?' staff':'')+'" data-i="'+i+'">'+esc(f.sec)+'</div>';
@@ -583,8 +605,12 @@ function fieldHTML(f,i){
   if(f.hint)inner+='<div class="hint">'+esc(f.hint)+'</div>';
   return '<div class="f" data-i="'+i+'">'+inner+'</div>';
 }
+const CALL_KEYS=['name','phone']; // 통화 메모 칸에서 받으므로 유형 폼에서는 숨김
 function renderForm(){
-  const T=TYPES[cur];$('form').innerHTML=T.fields.map(fieldHTML).join('');
+  if(!cur){$('formHead').innerHTML='<div class="fhead"><span class="muted">유형을 고르면 상세 칸이 여기 나와요. 안 골라도 오른쪽(아래) 메모로 기록할 수 있어요.</span></div>';$('form').innerHTML='';update();return;}
+  const T=TYPES[cur];
+  $('formHead').innerHTML='<div class="fhead"><span>'+esc(T.label)+' 상세'+(SEL.length>1?' <span class="muted">('+(SEL.indexOf(cur)+1)+'/'+SEL.length+')</span>':'')+'</span><button type="button" class="btn btn-ghost" id="dropType">이 건 빼기</button></div>';
+  $('form').innerHTML=T.fields.map((f,i)=>CALL_KEYS.includes(f.k)?'':fieldHTML(f,i)).join('');
   const v=STATE[cur];
   $('form').querySelectorAll('[data-k]').forEach(el=>{const k=el.dataset.k;
     if(el.classList.contains('chips'))return;
@@ -592,6 +618,8 @@ function renderForm(){
   update();
 }
 function update(){
+  syncCall();
+  if(!cur){renderOut();return;}
   const T=TYPES[cur],v=STATE[cur];
   // 표시/숨김
   T.fields.forEach((f,i)=>{const el=$('form').querySelector('[data-i="'+i+'"]');if(!el)return;
@@ -619,20 +647,24 @@ function update(){
   const tb=$('toSuccession');if(tb)tb.onclick=()=>handoff('cancel','succ');
   renderOut();
 }
+function callMemo(){
+  let m='접수번호 '+CALL.rid+'\n';
+  if(!SEL.length)m+='[통화 메모] '+todayStr()+'\n'+line('상호',CALL.name)+line('연락 온 번호',CALL.phone)+line('메모',CALL.note);
+  else{if(CALL.note)m+='통화 메모: '+CALL.note+'\n';m+=SEL.map(t=>withCur(t,()=>TYPES[t].memo(STATE[t])).trim()).join('\n\n');}
+  return m.trim();}
 function renderOut(){
-  const T=TYPES[cur],v=STATE[cur];
-  const fill=[];const g=(k,label,fmt)=>{const val=v[k];if(val!==''&&val!=null&&val!==false&&!String(k).startsWith('__')){return fmt?fmt(val):String(val);}if(!fill.includes(label))fill.push(label);return 'OOO';};
-  let outs=T.build(v,g);
-  const pii=new Set();
-  outs=outs.map(o=>{findPII(o.text).forEach(x=>pii.add(x));return Object.assign({},o,{text:maskPII(o.text)});});
-  if(!v.__rid)v.__rid=newRid();
-  let memo=('접수번호 '+v.__rid+'\n'+T.memo(v)).trim();findPII(memo).forEach(x=>pii.add(x));memo=maskPII(memo);
-  const miss=T.missing(v);
-  // 경고
+  if(!CALL.rid)CALL.rid=newRid();
+  const fill=[],pii=new Set();let outs=[];
+  if(cur){const v=STATE[cur];const g=(k,label,fmt)=>{const val=v[k];if(val!==''&&val!=null&&val!==false&&!String(k).startsWith('__')){return fmt?fmt(val):String(val);}if(!fill.includes(label))fill.push(label);return 'OOO';};
+    outs=TYPES[cur].build(v,g).map(o=>{findPII(o.text).forEach(x=>pii.add(x));return Object.assign({},o,{text:maskPII(o.text)});});}
+  let memo=callMemo();findPII(memo).forEach(x=>pii.add(x));memo=maskPII(memo);
+  // 필수 빠짐: 상호·번호는 한 번만, 나머지는 유형 이름을 붙여서
+  const miss=[];const seen=new Set();
+  if(!CALL.name){miss.push('상호');seen.add('상호');}
+  SEL.forEach(t=>withCur(t,()=>TYPES[t].missing(STATE[t])).forEach(x=>{if(x==='상호'||x==='연락 온 번호'){if(!seen.has(x)){seen.add(x);miss.push(x);}}else miss.push((SEL.length>1?TYPES[t].label+': ':'')+x);}));
   const w=[];
   if(pii.size)w.push(['red','<b>'+[...pii].join('·')+'</b>로 보이는 숫자가 있어 자동으로 가렸어요. 답장에는 넣지 마세요.']);
-  const vd=(v.visitAt||'').slice(0,10);
-  if(vd&&vd===todayStr()&&((cur==='as'&&v.action==='방문 점검')||(cur==='swap'&&v.method==='방문 교체')))
+  if(SEL.some(t=>{const v=STATE[t];const vd=(v.visitAt||'').slice(0,10);return vd&&vd===todayStr()&&((t==='as'&&v.action==='방문 점검')||(t==='swap'&&v.method==='방문 교체'));}))
     w.push(['orange','<b>당일 방문 건</b>입니다. 카톡에만 올리지 말고 사무실에 사람 있으면 따로 말해 주세요.']);
   $('warns').innerHTML=w.map(x=>'<div class="info '+x[0]+'">'+x[1]+'</div>').join('');
   let h='';
@@ -645,21 +677,25 @@ function renderOut(){
    +(on?'<button type="button" class="btn btn-primary" id="recBtn">복사 + 시트 기록</button>'
        :'<button type="button" class="btn btn-ghost" data-copy="memo">업무방용 복사</button><button type="button" class="btn btn-ghost" id="tsvBtn">시트용 한 줄 복사</button>')
    +'</div></div>'
-   +'<pre class="txt" id="memo">'+esc(memo)+'</pre>'+recHTML(v,on)
-   +(miss.length?'<div class="miss">필수 빠짐: '+esc(miss.join(', '))+(['as','swap','cancel'].includes(cur)?' — 안 올리면 2차·3차 재확인, 추가 통화, 점주 불만이 생깁니다.':'')+'</div>':'')+'</div>';
+   +'<pre class="txt" id="memo">'+esc(memo)+'</pre>'+recHTML(on)
+   +(miss.length?'<div class="miss">필수 빠짐: '+esc(miss.join(', '))+(SEL.some(t=>['as','swap','cancel'].includes(t))?' — 안 올리면 2차·3차 재확인, 추가 통화, 점주 불만이 생깁니다.':'')+'</div>':'')+'</div>';
   $('outs').innerHTML=h;
 }
 function handoff(from,to){
   const a=STATE[from],b=STATE[to];['name','addr','phone','caller','callerName','symptom','model','photo'].forEach(k=>{if(k in b&&a[k]!==undefined&&a[k]!==''&&!b[k])b[k]=a[k];});
   setType(to);toast((TYPES[to].label)+'(으)로 이어서 작성');
 }
-function setType(t){cur=t;renderTypes();renderForm();window.scrollTo({top:$('types').getBoundingClientRect().top+window.scrollY-60,behavior:'smooth'});}
+function setType(t){if(!SEL.includes(t))SEL.push(t);cur=t;renderTypes();renderForm();window.scrollTo({top:$('types').getBoundingClientRect().top+window.scrollY-60,behavior:'smooth'});}
 
 /* ===== 이벤트 ===== */
 $('types').addEventListener('click',e=>{const b=e.target.closest('.type-btn');if(!b)return;
   const t=b.dataset.t;
-  if(cur==='as'&&t==='swap'&&STATE.as.action==='교체 필요'){handoff('as','swap');return;}
+  if(cur==='as'&&t==='swap'&&STATE.as.action==='교체 필요'&&!SEL.includes('swap')){handoff('as','swap');return;}
   setType(t);});
+function dropType(t){SEL=SEL.filter(x=>x!==t);STATE[t]=defaults(t);cur=SEL[SEL.length-1]||null;renderTypes();renderForm();
+  toast(TYPES[t].label+' 건을 뺐어요'+(CALL.rec?' (이미 시트에 들어간 줄은 시트에서 상태를 보류로)':''));}
+$('formHead').addEventListener('click',e=>{if(e.target.closest('#dropType')&&cur)dropType(cur);});
+['name','phone','note'].forEach(k=>$('c_'+k).addEventListener('input',e=>{CALL[k]=e.target.value;update();}));
 $('form').addEventListener('input',e=>{const el=e.target;const k=el.dataset.k;if(!k)return;
   STATE[cur][k]=el.type==='checkbox'?el.checked:el.value;update();});
 $('form').addEventListener('change',e=>{const el=e.target;const k=el.dataset.k;if(!k)return;
@@ -669,9 +705,10 @@ $('form').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)r
   STATE[cur][k]=STATE[cur][k]===c.dataset.v?'':c.dataset.v;update();});
 $('outs').addEventListener('click',e=>{
   if(e.target.closest('#recBtn')){recordNow();return;}
-  const tb=e.target.closest('#tsvBtn');if(tb){copyText(tsvLine(cur,STATE[cur],$('memo').innerText),tb);return;}
+  const tb=e.target.closest('#tsvBtn');if(tb){copyText(tsvLines($('memo').innerText),tb);return;}
   const b=e.target.closest('[data-copy]');if(!b)return;copyText($(b.dataset.copy).innerText,b);});
-$('clearAll').addEventListener('click',()=>{Object.keys(TYPES).forEach(t=>STATE[t]=defaults(t));renderForm();toast('입력 내용을 모두 지웠어요');});
+$('clearAll').addEventListener('click',()=>{Object.keys(TYPES).forEach(t=>STATE[t]=defaults(t));SEL=[];cur=null;CALL=newCall();
+  ['name','phone','note'].forEach(k=>$('c_'+k).value='');renderTypes();renderForm();toast('다음 통화 — 새 접수번호로 시작해요');$('c_name').focus();});
 function copyText(t,btn){
   const done=()=>{toast('복사했어요');const o=btn.textContent;btn.textContent='복사됨 ✓';setTimeout(()=>btn.textContent=o,1200);};
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done,()=>fallback());}else fallback();
@@ -705,17 +742,23 @@ function sheetRow(t,v,memo){
   else if(t==='succ'){r.main=v.relation;r.sub=jn(v.posEdu&&'포스교육 '+v.posEdu,v.equipKeep&&'장비 '+v.equipKeep,v.transferDate&&'승계일 '+fmtDT(v.transferDate));}
   Object.keys(r).forEach(k=>{if(r[k]==null)r[k]='';if(typeof r[k]==='string')r[k]=maskPII(r[k]);});
   return r;}
-function tsvLine(t,v,memo){const r=sheetRow(t,v,memo),d=new Date(),p=n=>String(n).padStart(2,'0');
+// 이번 통화의 시트 줄들: 유형 없으면 '메모' 1줄, 있으면 켠 유형마다 1줄 (첫 건 = 접수번호, 다음 건 = 접수번호-2 …)
+function slotId(t){if(!(t in CALL.slots))CALL.slots[t]=Object.keys(CALL.slots).length+1;const n=CALL.slots[t];return n===1?CALL.rid:CALL.rid+'-'+n;}
+function callRows(memo){
+  if(!SEL.length){const r={id:CALL.rid,type:'메모',name:CALL.name,addr:'',phone:CALL.phone,caller:'',model:'',main:CALL.note,sub:'',visit:'',fault:'',penalty:'',succ:'',sugeum:'',staff:SH.staff,memo:memo};
+    Object.keys(r).forEach(k=>{if(typeof r[k]==='string')r[k]=maskPII(r[k]);});return [r];}
+  return SEL.map(t=>{const r=withCur(t,()=>sheetRow(t,STATE[t],memo));r.id=slotId(t);return r;});}
+function tsvLines(memo){const d=new Date(),p=n=>String(n).padStart(2,'0');
   const at=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
-  return [r.id,at,r.type,r.name,r.addr,r.phone,r.caller,r.model,r.main,r.sub,r.visit,r.fault,r.penalty,r.succ,r.sugeum,'접수','',r.staff,r.memo,'']
-    .map(x=>String(x).replace(/[\t\r\n]+/g,' / ').replace(/^([=+@])/,' $1')).join('\t');}
-const rowSig=(t,v)=>{const r=sheetRow(t,v,'');delete r.memo;return JSON.stringify(r);};
-function recHTML(v,on){
-  const st=v.__rec;let h='';
+  return callRows(memo).map(r=>[r.id,at,r.type,r.name,r.addr,r.phone,r.caller,r.model,r.main,r.sub,r.visit,r.fault,r.penalty,r.succ,r.sugeum,'접수','',r.staff,r.memo,'']
+    .map(x=>String(x).replace(/[\t\r\n]+/g,' / ').replace(/^([=+@])/,' $1')).join('\t')).join('\n');}
+const rowSig=()=>JSON.stringify(callRows('').map(r=>{delete r.memo;return r;}));
+function recHTML(on){
+  const st=CALL.rec;let h='';
   if(st){h+='<div class="rec '+st.s+'">'+esc(st.m)+'</div>';
-    if(st.s==='ok'&&v.__recSig!==rowSig(cur,v))h+='<div class="rec info2">기록 뒤에 내용이 바뀌었어요. 다시 누르면 같은 줄(같은 접수번호)이 고쳐집니다. 다른 가맹점이면 「모두 지우기」 후 작성하세요.</div>';
+    if(st.s==='ok'&&CALL.recSig!==rowSig())h+='<div class="rec info2">기록 뒤에 내용이 바뀌었어요. 다시 누르면 같은 접수번호 줄이 고쳐지고, 새로 켠 유형은 줄이 추가됩니다. 다른 가맹점 전화면 「다음 통화」를 누르세요.</div>';
     if(st.s==='err')h+='<div class="btns" style="justify-content:flex-start;margin-top:6px"><button type="button" class="btn btn-ghost" id="tsvBtn">시트용 한 줄 복사</button></div>';}
-  else if(!on)h+='<div class="rec info2">시트 연결 전이에요. 「시트용 한 줄 복사」 후 응대기록 시트 맨 아래 빈 줄의 A칸에 붙여넣으면 한 줄로 들어갑니다.</div>';
+  else if(!on)h+='<div class="rec info2">시트 연결 전이에요. 「시트용 한 줄 복사」 후 응대기록 시트 맨 아래 빈 줄의 A칸에 붙여넣으면 건마다 한 줄씩 들어갑니다.</div>';
   return h;}
 async function postSheet(body){
   const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),15000);
@@ -727,18 +770,18 @@ function errMsg(c){return c==='bad_key'?'비밀키가 맞지 않아요. 시트 �
   :c==='bad_response'?'시트 응답을 읽지 못했어요. 웹 앱 배포의 액세스 권한이 "모든 사용자"인지 확인하세요.'
   :'시트 기록 실패 ('+(c||'알 수 없음')+')';}
 async function recordNow(){
-  const t=cur,v=STATE[t];
-  if(v.__sentName!=null&&(v.name||'')!==v.__sentName){v.__rid=newRid();v.__rec=null;v.__sentName=null;}
+  if(CALL.sentName!=null&&CALL.name!==CALL.sentName){CALL.rid=newRid();CALL.slots={};CALL.rec=null;CALL.sentName=null;}
   renderOut();
   const memo=$('memo').innerText;
   copyText(memo,$('recBtn'));
-  const row=sheetRow(t,v,memo);
-  v.__rec={s:'wait',m:'업무방용 메모를 복사했고, 시트에 기록하는 중…'};renderOut();
-  try{const j=await postSheet({row});
-    if(j&&j.ok){v.__rec={s:'ok',m:(j.updated?'시트 기록을 고쳤어요':'시트에 기록했어요')+' ✓ 접수번호 '+j.id+' ('+j.row+'번째 줄)'};v.__sentName=v.name||'';v.__recSig=rowSig(t,v);}
-    else v.__rec={s:'err',m:errMsg(j&&j.error)};}
-  catch(e){v.__rec={s:'err',m:'시트 기록 실패 — 인터넷 연결이나 회사 PC 차단을 확인하세요. 메모는 복사됐으니 아래 「시트용 한 줄 복사」로 붙여넣어도 됩니다.'};}
-  if(cur===t)renderOut();}
+  const call=CALL,rows=callRows(memo);
+  call.rec={s:'wait',m:'업무방용 메모를 복사했고, 시트에 기록하는 중…'};renderOut();
+  try{const j=await postSheet({rows});
+    if(j&&j.ok){const rs=j.results||[j];const up=rs.filter(x=>x.updated).length,nw=rs.length-up;
+      call.rec={s:'ok',m:'시트 '+[nw?nw+'줄 추가':'',up?up+'줄 수정':''].filter(Boolean).join(', ')+' ✓ 접수번호 '+call.rid};call.sentName=call.name;call.recSig=rowSig();}
+    else call.rec={s:'err',m:errMsg(j&&j.error)};}
+  catch(e){call.rec={s:'err',m:'시트 기록 실패 — 인터넷 연결이나 회사 PC 차단을 확인하세요. 메모는 복사됐으니 아래 「시트용 한 줄 복사」로 붙여넣어도 됩니다.'};}
+  if(CALL===call)renderOut();}
 function sheetUI(){
   const on=sheetOn(),s=$('sheetState');s.className='set-state '+(on?'ok':'no');s.textContent=on?'(연결됨)':'(연결 안 함)';
   $('bnNet').innerHTML=on?'응대 기록 시트가 연결돼 있어요. <b>「복사 + 시트 기록」을 누를 때만</b> 내 구글시트로 한 줄을 보냅니다. 그 밖에는 인터넷으로 아무것도 보내지 않습니다.'

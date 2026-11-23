@@ -29,7 +29,7 @@ var COLS = [
 ];
 // 도구가 다시 보내도(수정) 덮어쓰지 않는 열: 상태·완료일·비고 (시트에서 직접 관리)
 var KEEP_ON_UPDATE = { status: 1, doneAt: 1, note: 1 };
-var TYPES = ['간단', 'A/S', '교체', '해지', '수수료', '신규', '승계'];
+var TYPES = ['메모', '간단', 'A/S', '교체', '해지', '수수료', '신규', '승계'];
 var STATUS = ['접수', '진행', '완료', '보류'];
 
 function onOpen() {
@@ -151,8 +151,11 @@ function doPost(e) {
   if (!key || !body || body.key !== key) return out({ ok: false, error: 'bad_key' });
   if (body.ping) return out({ ok: true, ping: true, sheet: SpreadsheetApp.getActiveSpreadsheet().getName() });
 
-  var r = body.row || {};
-  if (!r.id || !/^[0-9A-Za-z-]{6,30}$/.test(String(r.id))) return out({ ok: false, error: 'bad_id' });
+  var list = body.rows || (body.row ? [body.row] : []);
+  if (!list.length || list.length > 20) return out({ ok: false, error: 'bad_rows' });
+  for (var i = 0; i < list.length; i++) {
+    if (!list[i] || !/^[0-9A-Za-z-]{6,30}$/.test(String(list[i].id))) return out({ ok: false, error: 'bad_id' });
+  }
 
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
@@ -160,28 +163,34 @@ function doPost(e) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var log = ss.getSheetByName(SHEET_LOG);
     if (!log) return out({ ok: false, error: 'no_sheet' });
-    var found = log.getRange('A:A').createTextFinder(String(r.id)).matchEntireCell(true).findNext();
-    var rowNo, updated = false, existing = null;
-    if (found && found.getRow() > 1) {
-      rowNo = found.getRow(); updated = true;
-      existing = log.getRange(rowNo, 1, 1, COLS.length).getValues()[0];
-    } else {
-      rowNo = log.getLastRow() + 1;
-    }
-    var vals = COLS.map(function (c, i) {
-      var k = c[0];
-      if (updated && (KEEP_ON_UPDATE[k] || k === 'at')) return existing[i];
-      if (k === 'at') return new Date();
-      if (k === 'status') return '접수';
-      if (k === 'doneAt' || k === 'note') return '';
-      if (k === 'penalty') return r.penalty === '' || r.penalty == null ? '' : Number(r.penalty) || 0;
-      return clean_(r[k]);
-    });
-    log.getRange(rowNo, 1, 1, vals.length).setValues([vals]);
-    return out({ ok: true, id: r.id, row: rowNo, updated: updated });
+    var results = list.map(function (r) { return upsert_(log, r); });
+    return out({ ok: true, results: results, id: results[0].id, row: results[0].row, updated: results[0].updated });
   } finally {
     lock.releaseLock();
   }
+}
+
+/** 같은 접수번호 줄이 있으면 수정(상태·완료일·비고·접수일시 유지), 없으면 맨 아래 추가 */
+function upsert_(log, r) {
+  var found = log.getRange('A:A').createTextFinder(String(r.id)).matchEntireCell(true).findNext();
+  var rowNo, updated = false, existing = null;
+  if (found && found.getRow() > 1) {
+    rowNo = found.getRow(); updated = true;
+    existing = log.getRange(rowNo, 1, 1, COLS.length).getValues()[0];
+  } else {
+    rowNo = log.getLastRow() + 1;
+  }
+  var vals = COLS.map(function (c, i) {
+    var k = c[0];
+    if (updated && (KEEP_ON_UPDATE[k] || k === 'at')) return existing[i];
+    if (k === 'at') return new Date();
+    if (k === 'status') return '접수';
+    if (k === 'doneAt' || k === 'note') return '';
+    if (k === 'penalty') return r.penalty === '' || r.penalty == null ? '' : Number(r.penalty) || 0;
+    return clean_(r[k]);
+  });
+  log.getRange(rowNo, 1, 1, vals.length).setValues([vals]);
+  return { id: r.id, row: rowNo, updated: updated };
 }
 
 function doGet() {
