@@ -42,8 +42,8 @@ details.settings summary::-webkit-details-marker{display:none;}
 .set-state{font-size:12px;font-weight:500;}
 .set-state.ok{color:var(--green);}.set-state.no{color:var(--orange);}
 /* 유형 */
-.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.type-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 6px;font-size:14px;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;}
+.types{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.type-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:10px 4px;font-size:13px;word-break:keep-all;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;}
 .type-btn small{display:block;font-size:11px;font-weight:500;color:var(--text3);margin-top:2px;}
 .type-btn.on{background:var(--blue-light);border-color:var(--blue);color:var(--blue);}
 /* 폼 */
@@ -223,6 +223,26 @@ const FAULT_TEXT='점검 결과 침수·파손·낙하 등 사용 중 손상으�
 /* ===== 유형 정의 ===== */
 const TYPES={};
 
+/* --- 간단 문의 (단순 설정·사용법: 신입 교육·다른 직원 이어받기·"직원이 바꿨다" 근거) --- */
+TYPES.quick={label:'간단 문의',sub:'설정·사용법',fields:[
+  {info:()=>['blue','별거 아닌 문의도 남겨 두면 다른 직원이 이어서 응대할 수 있고, 나중에 "직원이 뭘 바꿨다"는 말에도 근거가 됩니다. <b>상호·문의·처리</b>만 적으면 돼요.']},
+  {k:'name',l:'상호',t:'text',req:1},
+  {k:'model',l:'장비·프로그램',t:'text',ph:'예: 엠포스, KCP-8800'},
+  {k:'question',l:'문의 내용',t:'textarea',req:1,ph:'예: 결제 후 영수증에 품목이 안 나와요'},
+  {k:'answer',l:'처리 내용',t:'textarea',req:1,ph:'예: 영수증 미리보기 "품목 안 나옴" 체크 해제 → 정상'},
+  {k:'phone',l:'연락 온 번호 (선택)',t:'tel'},
+  {k:'caller',l:'전화 발신자 (선택)',t:'chips',o:['대표자','가족','직원','매니저','담당자','기타']},
+  {k:'callerName',l:'발신자 이름 (선택)',t:'text'},
+],
+build(v,g){
+  let r='사장님, 문의하신 내용 처리했습니다.\n문의: '+g('question','문의 내용')+'\n처리: '+g('answer','처리 내용')+'\n\n다시 바꾸셔야 하거나 문제가 생기면 편하게 연락 주세요.';
+  return [{t:'가맹점 답장 (필요할 때만)',kind:'m',text:r}];
+},
+memo:v=>'[간단 문의] '+todayStr()+'\n'+line('상호',v.name)+line('장비·프로그램',v.model)+line('연락 온 번호',v.phone)+line('발신자',[v.caller,v.callerName].filter(Boolean).join(' '))
+  +line('문의',v.question)+line('처리',v.answer),
+missing:v=>[[v.name,'상호'],[v.question,'문의 내용'],[v.answer,'처리 내용']].filter(x=>!x[0]).map(x=>x[1]),
+};
+
 /* --- A/S --- */
 TYPES.as={label:'A/S 접수',sub:'고장·오류',fields:[
   ...F_INTAKE,
@@ -357,7 +377,7 @@ memo:v=>{const c=calcPenalty(v);
   +(c.ok?'위약금: '+won(c.base)+' × '+c.months+'개월 = '+won(c.penalty)+(c.exVat?' (폐업, 부가세 제외)':'')+'\n':'')
   +(v.cms!==''&&v.cms!=null?'CMS 미납: '+won(+v.cms||0)+(c.ok?' → 합계 '+won(c.penalty+(+v.cms||0)):'')+'\n':'')
   +'CMS 확인: '+ox(v.cmsChecked)+' / 업무방·수금방·엑셀 기록: '+ox(v.recorded)+'\n';},
-missing:v=>intakeMissing(v).concat([[v.reason,'철수 사유'],[v.returnHow,'반납 방식'],[v.route,'해지 경로'],[v.cmsChecked,'CMS 미납 확인'],[v.recorded,'업무방·수금방·엑셀 기록']].filter(x=>!x[0]).map(x=>x[1]))
+missing:v=>intakeMissing(v).concat([[v.caller,'발신자 신분'],[v.reason,'철수 사유'],[v.returnHow,'반납 방식'],[v.route,'해지 경로'],[v.cmsChecked,'CMS 미납 확인'],[v.recorded,'업무방·수금방·엑셀 기록']].filter(x=>!x[0]).map(x=>x[1]))
   .concat(v.reason==='폐업'&&!v.succession?['승계 여부 질문']:[]),
 };
 function monthsBetween(a,b){const x=new Date(a+'T00:00'),y=new Date(b+'T00:00');if(isNaN(x)||isNaN(y))return null;
@@ -394,7 +414,7 @@ build(v,g){
   return [{t:'가맹점 답장',kind:'m',text:r}];
 },
 memo:v=>commonMemo(v,'수수료 문의')+line('요지',v.kind)+line('카드사',v.card)+line('상세',v.detail)+'당사 확인 후 회신: '+ox(v.willCheck)+'\n',
-missing:v=>[[v.kind,'문의 요지'],[v.caller,'발신자']].filter(x=>!x[0]).map(x=>x[1]),
+missing:v=>[[v.kind,'문의 요지']].filter(x=>!x[0]).map(x=>x[1]),
 };
 
 /* --- 신규 --- */
@@ -536,12 +556,12 @@ function commonMemo(v,type){
     +line('장비 모델',v.model)+(v.model!==undefined&&TYPES[cur].fields.some(f=>f.k==='photo')?'모델 사진: '+ox(v.photo)+'\n':'')
     +line('발신자',[v.caller,v.callerName].filter(Boolean).join(' '));}
 function visitMemo(v){return line('방문 예정',fmtDT(v.visitAt))+line('오픈·마감·휴무',v.hours)+line('오픈 전 방문',v.beforeOpen)+(v.beforeOpen==='가능'?'비번·열쇠 확인: '+ox(v.pw)+'\n':'')+line('방문 불가',v.noVisit)+'업무일지: '+ox(v.ilji)+'\n';}
-function intakeMissing(v){return [[v.name,'상호'],[v.addr||!needAddr(v),'주소'],[v.phone,'연락 온 번호'],[v.model,'장비 모델명'],[v.photo,'모델 사진'],[v.caller,'발신자']].filter(x=>!x[0]).map(x=>x[1]);}
+function intakeMissing(v){return [[v.name,'상호'],[v.addr||!needAddr(v),'주소'],[v.phone,'연락 온 번호'],[v.model,'장비 모델명'],[v.photo,'모델 사진']].filter(x=>!x[0]).map(x=>x[1]);}
 function visitMissing(v){return [[v.hours,'오픈·마감·휴무'],[v.beforeOpen,'오픈 전 방문 여부'],[v.ilji,'업무일지']].filter(x=>!x[0]).map(x=>x[1]);}
 function co(key,label,g){return CO[key]?CO[key]:g('__co_'+key,label+' (회사 정보 설정)');}
 
 /* ===== 상태 (메모리에만) ===== */
-let cur='as';
+let cur='quick';
 const STATE={};
 function defaults(t){const o={};TYPES[t].fields.forEach(f=>{if(f.k&&!(f.k in o))o[f.k]=f.def!==undefined?f.def:(f.t==='check'?false:'');});return o;}
 Object.keys(TYPES).forEach(t=>STATE[t]=defaults(t));
@@ -668,14 +688,15 @@ const RE_EXEC=/^https:\/\/script\.google\.com\/(?:a\/macros\/[\w.-]+\/|macros\/)
 function sheetOn(){return RE_EXEC.test(SH.url)&&!!SH.key;}
 function newRid(){const d=new Date(),p=n=>String(n).padStart(2,'0'),c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let x='';for(let i=0;i<2;i++)x+=c[Math.floor(Math.random()*c.length)];
   return String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+'-'+x;}
-const TYPE_SHORT={as:'A/S',swap:'교체',cancel:'해지',fee:'수수료',newm:'신규',succ:'승계'};
+const TYPE_SHORT={quick:'간단',as:'A/S',swap:'교체',cancel:'해지',fee:'수수료',newm:'신규',succ:'승계'};
 const jn=(...a)=>a.filter(Boolean).join(' / ');
 // 시트 1줄 (열 순서는 apps-script.gs 의 COLS 와 같아야 함)
 function sheetRow(t,v,memo){
   const r={id:v.__rid,type:TYPE_SHORT[t],name:v.name,addr:v.addr,phone:v.phone,caller:[v.caller,v.callerName].filter(Boolean).join(' '),model:v.model,
     main:'',sub:'',visit:'',fault:'',penalty:'',succ:'',sugeum:'',staff:SH.staff,memo:memo};
   const fault=()=>{r.fault=v.fault?'O':'';r.sugeum=v.fault?ox(v.sugeum):'';};
-  if(t==='as'){r.main=v.symptom;r.sub=jn(v.action,v.actionNote,v.extra);r.visit=v.action==='방문 점검'?fmtDT(v.visitAt):'';fault();}
+  if(t==='quick'){r.main=v.question;r.sub=v.answer;}
+  else if(t==='as'){r.main=v.symptom;r.sub=jn(v.action,v.actionNote,v.extra);r.visit=v.action==='방문 점검'?fmtDT(v.visitAt):'';fault();}
   else if(t==='swap'){r.main=v.symptom;r.sub=jn(v.method,v.extra);r.visit=v.method==='방문 교체'?fmtDT(v.visitAt):'';fault();}
   else if(t==='cancel'){const c=calcPenalty(v);r.main=v.reason;r.sub=jn(v.reasonDetail,v.cancelDate&&'해지희망 '+fmtDT(v.cancelDate),v.returnHow,v.route&&'경로 '+v.route);
     r.visit=v.returnHow==='방문 회수'?v.visitWindow:'';r.penalty=c.ok?Math.round(c.penalty):'';r.succ=v.reason==='폐업'?(v.succession||'미확인'):'';r.sugeum=ox(v.recorded);}

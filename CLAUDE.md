@@ -24,7 +24,7 @@
 | 경로 | 도구 | 사용자 |
 |---|---|---|
 | `index.html` | 스카이티제이 월말 정산 — 에이스아이피 발송 파일과 자체 택배 기록(엑셀)을 대사하여 불일치·KIS 키핑재고 차감·최종 정산액 산출 | 스카이티제이 (카드밴대리점) |
-| `merchant-reply/index.html` | 가맹점 답장 초안 — 문의 유형(A/S·교체·해지·수수료·신규·승계)을 고르고 칸을 채우면 카톡 답장 + 업무방 접수 메모 생성, 해지 위약금 계산. **가맹점 입력값 기기 저장 0.** 외부 통신은 기본 0이고, 「📒 응대 기록 시트 연결」을 설정한 기기에서 「복사 + 시트 기록」을 누를 때만 본인 구글시트(Apps Script 웹 앱, `merchant-reply/apps-script.gs`)로 1줄 전송 — CSP 로 script.google.com 외 통신 차단. 웹 앱 URL·비밀키·회수 주소·회사 연락처는 기기 localStorage 에만, **저장소에 절대 넣지 않음**. 설치 안내 `docs/merchant-log-sheet-setup.md`, 설계 `docs/plans/2026-11-23-merchant-log-sheet.md`. 응대 기준은 `docs/plans/2026-11-23-merchant-reply-tool.md` | 스카이티제이 |
+| `merchant-reply/index.html` | 가맹점 답장 초안 — 문의 유형(간단 문의·A/S·교체·해지·수수료·신규·승계)을 고르고 칸을 채우면 카톡 답장 + 업무방 접수 메모 생성, 해지 위약금 계산. **가맹점 입력값 기기 저장 0.** 외부 통신은 기본 0이고, 「📒 응대 기록 시트 연결」을 설정한 기기에서 「복사 + 시트 기록」을 누를 때만 본인 구글시트(Apps Script 웹 앱, `merchant-reply/apps-script.gs`)로 1줄 전송 — CSP 로 script.google.com 외 통신 차단. 웹 앱 URL·비밀키·회수 주소·회사 연락처는 기기 localStorage 에만, **저장소에 절대 넣지 않음**. 설치 안내 `docs/merchant-log-sheet-setup.md`, 설계 `docs/plans/2026-11-23-merchant-log-sheet.md`. 응대 기준은 `docs/plans/2026-11-23-merchant-reply-tool.md` | 스카이티제이 |
 | `claude-usage/index.html` | 클로드 사용량 대시보드 — Claude 앱/웹 설정의 "플랜 사용량 한도"(현재 세션 + 주간 한도: 모든 모델·Opus·Fable 등) 값을 직접 입력하면 링 게이지 + 재설정 카운트다운으로 시각화, PNG 저장 (공식 API 없어 수동 입력). **개인용** — 회사 PC에서 사용량을 띄워 보려는 용도 | 개인 |
 | `petfocus/index.html` | (리다이렉트) → `petfocus-inventory/stock-cost/` 로 이동 | — |
 | `petfocus-detail/index.html` | (리다이렉트) → `petfocus-inventory/detail/` 로 이동 | — |
@@ -42,6 +42,6 @@
 자동 테스트 없음. 변경 시 Playwright(`executablePath: '/opt/pw-browsers/chromium'`)로 파일을 직접 열어
 핵심 흐름을 확인하고 콘솔 오류를 점검한다.
 - `index.html`(월말정산): 에이스아이피 파일 + 택배 기록 업로드 → 대사 결과·불일치·KIS 차감·정산액 표시.
-- `merchant-reply/`: 6개 유형 입력 → 답장·메모·복사, 위약금 계산, 사업자번호 마스킹, 새로고침 시 입력값 사라짐, `grep 'https\?://'` 결과는 CSP 의 script.google.com·googleusercontent.com 뿐, 시트 미연결 시 네트워크 요청 0. 시트 연결 시(가짜 엔드포인트로 route) 6개 유형 「복사 + 시트 기록」 → 보낸 1줄의 열·마스킹 확인, 같은 건 재전송 = 같은 접수번호, 시트용 한 줄 복사 = 탭 20열.
+- `merchant-reply/`: 7개 유형 입력 → 답장·메모·복사, 위약금 계산, 사업자번호 마스킹, 새로고침 시 입력값 사라짐, `grep 'https\?://'` 결과는 CSP 의 script.google.com·googleusercontent.com 뿐, 시트 미연결 시 네트워크 요청 0. 시트 연결 시(가짜 엔드포인트로 route) 7개 유형 「복사 + 시트 기록」 → 보낸 1줄의 열·마스킹 확인, 같은 건 재전송 = 같은 접수번호, 시트용 한 줄 복사 = 탭 20열.
 - `claude-usage/`: 사용량 입력 → 링 게이지·카운트다운 → PNG 저장.
 - 리다이렉트 stub: 새 주소로 실제 이동하는지 확인.

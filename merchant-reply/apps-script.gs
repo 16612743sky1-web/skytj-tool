@@ -29,7 +29,7 @@ var COLS = [
 ];
 // 도구가 다시 보내도(수정) 덮어쓰지 않는 열: 상태·완료일·비고 (시트에서 직접 관리)
 var KEEP_ON_UPDATE = { status: 1, doneAt: 1, note: 1 };
-var TYPES = ['A/S', '교체', '해지', '수수료', '신규', '승계'];
+var TYPES = ['간단', 'A/S', '교체', '해지', '수수료', '신규', '승계'];
 var STATUS = ['접수', '진행', '완료', '보류'];
 
 function onOpen() {
