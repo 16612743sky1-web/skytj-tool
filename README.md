@@ -7,6 +7,7 @@
 | 도구 | 주소 |
 |---|---|
 | 스카이티제이 월말 정산 | https://16612743sky1-web.github.io/skytj-tool/ |
+| 가맹점 답장 초안 (사내용) | https://16612743sky1-web.github.io/skytj-tool/merchant-reply/ |
 | 클로드 사용량 대시보드 (개인용) | https://16612743sky1-web.github.io/skytj-tool/claude-usage/ |
 
 > 📦 **펫포커스 도구는 이사했습니다.** 재고/원가 관리·상세페이지 생성기는 이제

@@ -1,6 +1,6 @@
 ---
 name: deploy-check
-description: skytj-tool의 정적 HTML 도구(월말정산 index.html, claude-usage)를 수정한 뒤 GitHub Pages에 올리기 전 점검하는 체크리스트. "배포", "올려줘", "커밋", "확인해줘", HTML 수정 마무리 시점에 사용.
+description: skytj-tool의 정적 HTML 도구(월말정산 index.html, merchant-reply, claude-usage)를 수정한 뒤 GitHub Pages에 올리기 전 점검하는 체크리스트. "배포", "올려줘", "커밋", "확인해줘", HTML 수정 마무리 시점에 사용.
 ---
 
 # 배포 전 점검 (deploy-check)
@@ -10,7 +10,7 @@ skytj-tool은 서버 없이 정적 HTML만으로 GitHub Pages에 배포된다.
 그래서 커밋/푸시 전에 아래를 반드시 확인한다.
 
 > 이 저장소는 **회사업무(카드밴대리점) 도구** 전용이다.
-> `index.html`(스카이티제이 월말정산)과 `claude-usage/`(개인 사용량 대시보드)만 있다.
+> `index.html`(스카이티제이 월말정산), `merchant-reply/`(가맹점 답장 초안), `claude-usage/`(개인 사용량 대시보드)만 있다.
 > 펫포커스 도구는 별도 저장소(`petfocus-inventory`)로 이관됨. `petfocus/`·`petfocus-detail/`에
 > 남은 것은 옛 주소를 새 주소로 넘겨주는 **리다이렉트 페이지**뿐이다.
 
@@ -26,6 +26,7 @@ Playwright로 파일을 직접 열어 콘솔 오류와 핵심 흐름을 점검�
 - **콘솔에 빨간 오류(Error)가 없는지** — 있으면 배포 금지.
 - 수정한 도구의 **핵심 흐름이 실제로 동작하는지**:
   - `index.html` (스카이티제이 월말정산): 에이스아이피 발송 파일 + 택배 기록 업로드 → 대사 결과·불일치·KIS 키핑재고 차감·최종 정산액 표시
+  - `merchant-reply/index.html`: 6개 유형 답장·메모 생성, 위약금 계산, 새로고침 시 가맹점 입력값 사라짐, 외부 URL·네트워크 요청 0
   - `claude-usage/index.html`: 사용량 입력 → 링 게이지/카운트다운 표시 → PNG 저장
 - 모바일 폭(390px)에서 레이아웃이 깨지지 않는지.
 
