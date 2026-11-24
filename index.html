@@ -117,6 +117,11 @@ tbody td{padding:8px 12px;vertical-align:middle;}
     </div>
     <div class="divider"></div>
     <div class="form-row">
+      <span class="form-label">KIS 무상전표</span>
+      <input class="form-input" id="kisFreeInput" type="number" min="0" inputmode="numeric" placeholder="예: 300" style="width:100px">
+      <span class="form-hint">박스 (79*70) · 비우면 기존처럼 정기분전표 표시 행으로 차감</span>
+    </div>
+    <div class="form-row" style="margin-top:10px">
       <span class="form-label">정산 년월</span>
       <input class="form-input" id="monthInput" placeholder="26.04" style="width:100px">
       <span class="form-hint">파일2의 시트명과 동일 (예: 26.04)</span>
@@ -189,6 +194,7 @@ function checkRunReady(){ document.getElementById('runBtn').disabled=!(data1&&da
 
 function runCompare(){
   const month=document.getElementById('monthInput').value.trim()||'26.04';
+  saveKisFree(month);
   const rows1=parseFile1(data1);
   const rows2All=parseFile2(data2,month);
   const rows2NonKis=rows2All.filter(r=>!r.키핑);
@@ -216,7 +222,26 @@ function runCompare(){
   kisRows.forEach(r2=>{ no++; results.push({no,r1:{},r2,nameMatch:false,qtyMatch:false,addrMatch:false,isKis:true,issues:[],status:'kis'}); });
 
   compareResult=results;
-  renderMonthly(results,rows1,kisRows,rows2NonKis.length,rows1.length,kisRows.length);
+  renderMonthly(results,rows1,kisRows,rows2NonKis.length,rows1.length,kisRows.length,readKisFree());
+}
+
+// ── KIS 무상전표(79*70) ── 월별 입력값은 이 기기에만 기억 (localStorage)
+const KIS_ITEM_RE=/79\s*[*xX×]\s*70/;
+const KIS_EXCLUDE_RE=/\d+\s*EA/i; // 낱개 소량('79*70 24EA')은 박스가 아니므로 제외
+function isKisItem(p){ const s=String(p||''); return KIS_ITEM_RE.test(s)&&!KIS_EXCLUDE_RE.test(s); }
+function kisFreeKey(m){ return 'skytj_kis_free_'+m; }
+function readKisFree(){ const v=document.getElementById('kisFreeInput').value.trim(); if(v==='') return null; const n=Number(v); return isNaN(n)||n<0?null:Math.floor(n); }
+function saveKisFree(m){ try{ const v=readKisFree(); if(v===null) localStorage.removeItem(kisFreeKey(m)); else localStorage.setItem(kisFreeKey(m),String(v)); }catch(e){} }
+function loadKisFree(){ const m=document.getElementById('monthInput').value.trim(); if(!m) return; try{ const v=localStorage.getItem(kisFreeKey(m)); document.getElementById('kisFreeInput').value=v===null?'':v; }catch(e){} }
+document.getElementById('monthInput').addEventListener('change',loadKisFree);
+// 에이스아이피 파일(파일1)의 79*70 박스·금액 → 무상분 차감액
+function calcKisFree(rows1,free){
+  let qty=0, amt=0;
+  rows1.forEach(r=>{ if(isKisItem(r.품명)){ qty+=(r.수량||1); amt+=(r.합계||0); } });
+  const unit=qty?amt/qty:0;
+  const boxes=Math.min(qty,free);
+  const deduct=boxes===qty?amt:Math.round(unit*boxes);
+  return {qty,amt,unit,boxes,deduct,excess:Math.max(0,qty-free),excessAmt:amt-deduct};
 }
 
 function parseFile1(wb){
@@ -262,19 +287,24 @@ function parseFile2(wb,month){
   return rows;
 }
 
-function renderMonthly(results,rows1,kisRows,ourTotal,aceTotal,kisQty){
+function renderMonthly(results,rows1,kisRows,ourTotal,aceTotal,kisQty,kisFree){
   document.getElementById('results').classList.remove('hidden');
   const warns=results.filter(r=>r.status==='warn');
   const kisKeySet=new Set(kisRows.map(r=>norm(r.상호)+'||'+norm(r.품명)));
   let totalVat=0, kisAmt=0;
   rows1.forEach(r=>{ totalVat+=(r.합계||0); if(kisKeySet.has(norm(r.상호)+'||'+norm(r.품명))) kisAmt+=(r.합계||0); });
+  // KIS 무상전표 수량을 입력했으면 정기분전표 행 대신 '79*70 무상수량' 기준으로 차감 (둘은 같은 것)
+  const kf=kisFree===null||kisFree===undefined?null:calcKisFree(rows1,kisFree);
+  if(kf) kisAmt=kf.deduct;
   const qtyMatch=ourTotal===aceTotal;
 
   document.getElementById('summaryGrid').innerHTML=`
     <div class="stat blue"><div class="label">우리 발송 수량</div><div class="value">${ourTotal}</div><div class="hint">건 (KIS 제외)</div></div>
     <div class="stat blue"><div class="label">에이스아이피 수량</div><div class="value">${aceTotal}</div><div class="hint">건</div></div>
     <div class="stat ${qtyMatch?'green':'red'}"><div class="label">수량 일치</div><div class="value">${qtyMatch?'✅':'❌'}</div><div class="hint">${qtyMatch?'일치':'차이 '+(ourTotal-aceTotal)+'건'}</div></div>
-    <div class="stat"><div class="label">KIS 차감</div><div class="value">${kisQty}</div><div class="hint">건</div></div>
+    ${kf
+      ?`<div class="stat"><div class="label">KIS 무상 차감</div><div class="value">${kf.boxes}</div><div class="hint">박스 / 79*70 ${kf.qty}박스${kf.excess?' · 초과 '+kf.excess:''}</div></div>`
+      :`<div class="stat"><div class="label">KIS 차감</div><div class="value">${kisQty}</div><div class="hint">건</div></div>`}
     <div class="stat orange"><div class="label">정산 건수</div><div class="value">${ourTotal}</div><div class="hint">건</div></div>`;
   document.getElementById('issueCount').textContent=warns.length+'건';
   document.getElementById('kisCount').textContent=kisRows.length+'건';
@@ -319,8 +349,13 @@ function renderMonthly(results,rows1,kisRows,ourTotal,aceTotal,kisQty){
   rows1.forEach(r=>{ if(!prod[r.품명]) prod[r.품명]={qty:0,total:0}; prod[r.품명].qty++; prod[r.품명].total+=(r.합계||0); });
   document.getElementById('settlementRows').innerHTML=
     Object.entries(prod).map(([k,v])=>`<div class="settle-row"><span class="settle-key">${k} (${v.qty}건)</span><span class="settle-val">${v.total.toLocaleString()}원</span></div>`).join('')+
-    `<div class="settle-row settle-minus"><span class="settle-key">🏦 KIS 키핑재고 차감 (${kisQty}건)</span><span class="settle-val" style="color:var(--blue)">- ${kisAmt.toLocaleString()}원</span></div>
-    <div class="settle-row settle-total" style="border-top:2px solid var(--border);margin-top:4px"><span class="settle-key">✅ 에이스아이피 최종 정산 금액</span><span class="settle-val" style="font-size:22px;color:var(--green)">${(totalVat-kisAmt).toLocaleString()}원</span></div>`;
+    (kf
+      ?`<div class="settle-row"><span class="settle-key">79*70 에이스아이피 청구 (${kf.qty}박스, 박스당 ${Math.round(kf.unit).toLocaleString()}원)</span><span class="settle-val">${kf.amt.toLocaleString()}원</span></div>
+    <div class="settle-row settle-minus"><span class="settle-key">🏦 KIS 무상전표 차감 (${kf.boxes}박스 / 무상 ${kisFree}박스)</span><span class="settle-val" style="color:var(--blue)">- ${kisAmt.toLocaleString()}원</span></div>
+    <div class="settle-row"><span class="settle-key" style="color:${kf.excess?'var(--red)':'var(--text3)'}">${kf.excess?'⚠️ 79*70 무상 초과분 (당사 부담, 정산에 포함) '+kf.excess+'박스':'79*70 무상 초과 없음'+(kf.qty<kisFree?' (무상 '+(kisFree-kf.qty)+'박스 남음)':'')}</span><span class="settle-val" style="color:${kf.excess?'var(--red)':'var(--text3)'}">${kf.excessAmt.toLocaleString()}원</span></div>
+    <div class="settle-row"><span class="settle-key" style="color:var(--text3);font-size:12px">참고: 시트 정기분전표 표시 ${kisQty}건</span><span class="settle-val"></span></div>`
+      :`<div class="settle-row settle-minus"><span class="settle-key">🏦 KIS 키핑재고 차감 (${kisQty}건)</span><span class="settle-val" style="color:var(--blue)">- ${kisAmt.toLocaleString()}원</span></div>`)+
+    `<div class="settle-row settle-total" style="border-top:2px solid var(--border);margin-top:4px"><span class="settle-key">✅ 에이스아이피 최종 정산 금액</span><span class="settle-val" style="font-size:22px;color:var(--green)">${(totalVat-kisAmt).toLocaleString()}원</span></div>`;
 }
 
 function toRgb(hex){ if(!hex) return null; let h=String(hex).trim().toLowerCase().replace('#',''); if(h==='white'||h==='ffffff'||h==='fff') return [255,255,255]; if(h.length===3) h=h.split('').map(c=>c+c).join(''); if(h.length!==6) return null; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); if(isNaN(r)||isNaN(g)||isNaN(b)) return null; return [r,g,b]; }
