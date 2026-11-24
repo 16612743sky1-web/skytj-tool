@@ -66,10 +66,164 @@ const CONFIG = {
 const LOG_HEADERS = ['시각', '시트', '방식', '총건수', '노란색', '빨간색', '발송', '결과', '수신', '비고'];
 
 // ════════════════════════════════════════════════
-// SECTION 0. 카카오톡(솔라피) 발송 유틸 함수
+// SECTION 0. 카카오톡 알림 — ① 카카오 '나에게 보내기'(무료) → ② 솔라피(키 있을 때) → ③ 건너뜀
 // ════════════════════════════════════════════════
+// ★ V8.1: 솔라피 없이 카카오 '나에게 보내기' API 로 본인 카톡에 바로 알림.
+//   키·토큰은 코드에 쓰지 않고 [프로젝트 설정 > 스크립트 속성]에만 저장한다.
+//     KAKAO_REST_KEY       카카오 개발자 앱의 REST API 키
+//     KAKAO_CLIENT_SECRET  (선택) 앱에서 Client Secret 을 켰을 때만
+//     KAKAO_REFRESH_TOKEN  메뉴 '💬 카톡 알림 연결'이 자동 저장 (약 2달 유효, 쓸 때마다 자동 연장)
+//   카톡 '나에게 보내기'는 연결한 본인 1명만 받는다. 직원 공유는 지금처럼 회사 메일.
+
+const KAKAO = {
+  REDIRECT_URI: 'https://16612743sky1-web.github.io/skytj-tool/', // 카카오 앱에 똑같이 등록
+  MAX_TEXT: 200,                 // 텍스트 템플릿 최대 글자수
+  DEDUPE_HOURS: 3,               // 같은 경보는 이 시간 안에 다시 안 보냄 (1시간마다 도는 트리거 반복 방지)
+  PROP_REST: 'KAKAO_REST_KEY',
+  PROP_SECRET: 'KAKAO_CLIENT_SECRET',
+  PROP_REFRESH: 'KAKAO_REFRESH_TOKEN',
+  PROP_FAIL_DAY: 'KAKAO_FAIL_NOTICE_DAY',
+  CACHE_ACCESS: 'KAKAO_ACCESS_TOKEN',
+};
 
 function sendKakaoTalk(messageText) {
+  const text = String(messageText == null ? '' : messageText);
+  try { if (sendKakaoMemo_(text)) return true; }
+  catch (e) { Logger.log('카카오 나에게보내기 실패: ' + e.message); }
+  return sendSolapi_(text);
+}
+
+// 메일(회사 경보메일) + 카톡을 같이 보내는 경보. 카톡이 안 돼도 메일은 간다.
+function alert_(subject, body) {
+  const key = 'ALERT_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, subject + '|' + body, Utilities.Charset.UTF_8));
+  const cache = CacheService.getScriptCache();
+  if (cache.get(key)) return;
+  cache.put(key, '1', KAKAO.DEDUPE_HOURS * 3600);
+  let url = ''; try { url = SpreadsheetApp.getActiveSpreadsheet().getUrl(); } catch (e) {}
+  getWatchAlertEmails_().forEach(to => {
+    try { GmailApp.sendEmail(to, subject, body + (url ? '\n\n시트 바로가기: ' + url : '')); } catch (e) {}
+  });
+  try { sendKakaoTalk(subject + '\n' + body); } catch (e) {}
+}
+
+function kakaoProps_() { return PropertiesService.getScriptProperties(); }
+
+function kakaoTokenRequest_(params) {
+  const props = kakaoProps_();
+  const secret = props.getProperty(KAKAO.PROP_SECRET);
+  if (secret) params.client_secret = secret;
+  const res = UrlFetchApp.fetch('https://kauth.kakao.com/oauth/token', {
+    method: 'post', contentType: 'application/x-www-form-urlencoded;charset=utf-8',
+    payload: params, muteHttpExceptions: true,
+  });
+  let json = {}; try { json = JSON.parse(res.getContentText()); } catch (e) {}
+  if (res.getResponseCode() !== 200 || !json.access_token) {
+    throw new Error('카카오 토큰 오류 ' + res.getResponseCode() + ' ' + (json.error_description || json.error || json.msg || ''));
+  }
+  if (json.refresh_token) props.setProperty(KAKAO.PROP_REFRESH, json.refresh_token); // 새로 주면 교체(만료 연장)
+  const ttl = Math.min(21600, Math.max(60, (json.expires_in || 3600) - 300));
+  CacheService.getScriptCache().put(KAKAO.CACHE_ACCESS, json.access_token, ttl);
+  return json.access_token;
+}
+
+function kakaoAccessToken_() {
+  const cached = CacheService.getScriptCache().get(KAKAO.CACHE_ACCESS);
+  if (cached) return cached;
+  const props = kakaoProps_();
+  try {
+    return kakaoTokenRequest_({
+      grant_type: 'refresh_token',
+      client_id: props.getProperty(KAKAO.PROP_REST),
+      refresh_token: props.getProperty(KAKAO.PROP_REFRESH),
+    });
+  } catch (e) {
+    // 토큰 만료 등 → 하루 1번만 회사 메일로 재연결 안내
+    const today = ymd_(new Date());
+    if (props.getProperty(KAKAO.PROP_FAIL_DAY) !== today) {
+      props.setProperty(KAKAO.PROP_FAIL_DAY, today);
+      try {
+        GmailApp.sendEmail(CONFIG.EMAIL_ALERT, '[스카이티제이] 카톡 알림 재연결 필요',
+          '카카오 로그인 토큰이 만료되어 카톡 알림을 보내지 못했습니다. (메일 경보는 정상)\n' +
+          '구글시트 메뉴 📦 용지발송 > 💬 카톡 알림 연결 을 다시 실행해 주세요.\n\n오류: ' + e.message);
+      } catch (e2) {}
+    }
+    throw e;
+  }
+}
+
+function sendKakaoMemo_(text) {
+  const props = kakaoProps_();
+  if (!props.getProperty(KAKAO.PROP_REST) || !props.getProperty(KAKAO.PROP_REFRESH)) return false; // 미연결
+  let body = text;
+  if (body.length > KAKAO.MAX_TEXT) body = body.slice(0, KAKAO.MAX_TEXT - 8) + '…(시트 확인)';
+  let link = KAKAO.REDIRECT_URI; try { link = SpreadsheetApp.getActiveSpreadsheet().getUrl(); } catch (e) {}
+  const template = { object_type: 'text', text: body, link: { web_url: link, mobile_web_url: link }, button_title: '시트 열기' };
+  const post = (token) => UrlFetchApp.fetch('https://kapi.kakao.com/v2/api/talk/memo/default/send', {
+    method: 'post', contentType: 'application/x-www-form-urlencoded;charset=utf-8',
+    headers: { Authorization: 'Bearer ' + token },
+    payload: { template_object: JSON.stringify(template) }, muteHttpExceptions: true,
+  });
+  let res = post(kakaoAccessToken_());
+  if (res.getResponseCode() === 401) { // 캐시된 토큰이 먼저 만료된 경우 1회 재시도
+    CacheService.getScriptCache().remove(KAKAO.CACHE_ACCESS);
+    res = post(kakaoAccessToken_());
+  }
+  if (res.getResponseCode() !== 200) throw new Error('나에게 보내기 HTTP ' + res.getResponseCode() + ' ' + res.getContentText().slice(0, 200));
+  return true;
+}
+
+// 메뉴: 💬 카톡 알림 연결 (최초 1회, 토큰 만료 시 다시)
+function kakaoConnect() {
+  const ui = SpreadsheetApp.getUi(); const props = kakaoProps_();
+  let rest = props.getProperty(KAKAO.PROP_REST);
+  if (!rest) {
+    const r = ui.prompt('💬 카톡 알림 연결 (1/2)', '카카오 개발자 앱의 REST API 키를 붙여넣으세요.', ui.ButtonSet.OK_CANCEL);
+    if (r.getSelectedButton() !== ui.Button.OK || !r.getResponseText().trim()) return;
+    rest = r.getResponseText().trim(); props.setProperty(KAKAO.PROP_REST, rest);
+  }
+  const authUrl = 'https://kauth.kakao.com/oauth/authorize?response_type=code&scope=talk_message' +
+    '&client_id=' + encodeURIComponent(rest) + '&redirect_uri=' + encodeURIComponent(KAKAO.REDIRECT_URI);
+  const html = HtmlService.createHtmlOutput(
+    '<div style="font-family:sans-serif;font-size:13px;line-height:1.6">' +
+    '<p>① 아래 버튼을 눌러 카카오 로그인 → <b>카카오톡 메시지 전송</b>에 동의</p>' +
+    '<p><a href="' + authUrl + '" target="_blank" style="display:inline-block;background:#fee500;color:#000;padding:8px 14px;border-radius:6px;text-decoration:none;font-weight:bold">카카오 로그인 열기</a></p>' +
+    '<p>② 로그인 후 열린 페이지의 <b>주소창 전체</b>를 복사</p><p>③ 이 창을 닫으면 붙여넣는 칸이 나옵니다.</p></div>'
+  ).setWidth(380).setHeight(230);
+  ui.showModalDialog(html, '💬 카톡 알림 연결 (2/2)');
+  const r2 = ui.prompt('💬 카톡 알림 연결 (2/2)', '로그인 후 주소창 전체(…?code=… 포함)를 붙여넣으세요.', ui.ButtonSet.OK_CANCEL);
+  if (r2.getSelectedButton() !== ui.Button.OK) return;
+  const raw = r2.getResponseText().trim();
+  const m = raw.match(/[?&]code=([^&#\s]+)/); const code = m ? decodeURIComponent(m[1]) : raw;
+  if (!code) { ui.alert('코드가 비어 있습니다.'); return; }
+  try {
+    kakaoTokenRequest_({ grant_type: 'authorization_code', client_id: rest, redirect_uri: KAKAO.REDIRECT_URI, code: code });
+    props.deleteProperty(KAKAO.PROP_FAIL_DAY);
+    const ok = sendKakaoMemo_('[스카이티제이] 카톡 알림 연결 완료 ✅\n이제 발송 사고·경보가 이 카톡으로 옵니다.');
+    ui.alert('연결 완료', ok ? '카톡으로 테스트 메시지를 보냈습니다.' : '연결은 됐지만 메시지 전송을 확인하지 못했습니다.', ui.ButtonSet.OK);
+  } catch (e) {
+    ui.alert('연결 실패', e.message + '\n\n• REST API 키, Redirect URI(' + KAKAO.REDIRECT_URI + ') 등록, 동의항목 "카카오톡 메시지 전송" 을 확인하세요.\n• 코드는 1번만 쓸 수 있어 실패하면 처음부터 다시 하세요.', ui.ButtonSet.OK);
+  }
+}
+
+// 메뉴: 💬 카톡 테스트 메시지
+function kakaoTest() {
+  const ui = SpreadsheetApp.getUi();
+  let ok = false, err = '';
+  try { ok = sendKakaoTalk('[스카이티제이] 카톡 알림 테스트 ✅ ' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'MM/dd HH:mm')); }
+  catch (e) { err = e.message; }
+  ui.alert('💬 카톡 테스트', ok ? '보냈습니다. 카톡 "나와의 채팅"을 확인하세요.' : ('보내지 못했습니다. 먼저 "💬 카톡 알림 연결"을 해 주세요. ' + err), ui.ButtonSet.OK);
+}
+
+// 메뉴: 💬 카톡 알림 연결 해제
+function kakaoDisconnect() {
+  const props = kakaoProps_();
+  [KAKAO.PROP_REFRESH, KAKAO.PROP_FAIL_DAY].forEach(k => props.deleteProperty(k));
+  CacheService.getScriptCache().remove(KAKAO.CACHE_ACCESS);
+  SpreadsheetApp.getUi().alert('카톡 알림 연결을 해제했습니다. (REST API 키는 남겨 둠)');
+}
+
+// (대체) 솔라피 알림톡 — CONFIG 에 솔라피 키가 있을 때만 사용
+function sendSolapi_(messageText) {
   if (CONFIG.SOLAPI_API_KEY.includes('입력하세요') || !CONFIG.SOLAPI_API_KEY) {
     Logger.log('⚠️ 솔라피 API 설정이 완료되지 않아 카카오톡 발송을 건너뜁니다.');
     return false;
@@ -335,7 +489,7 @@ function sendZeroAlert(sheetName, analysis) {
 
 function sendToAceIP(isManual) {
   const ss = SpreadsheetApp.getActiveSpreadsheet(); const sheet = getLatestSheet(ss); const method = isManual ? '수동' : '자동';
-  if (!sheet) { writeLog({ method, result: '❌ 시트없음', note: 'yy.mm 형식 시트 없음' }); return; }
+  if (!sheet) { writeLog({ method, result: '❌ 시트없음', note: 'yy.mm 형식 시트 없음' }); alert_('[스카이티제이][긴급] 용지 발송 중단 — 시트 없음', 'yy.mm 형식(예: 26.11) 시트를 찾지 못해 발송하지 못했습니다.'); return; }
   // ★ V7: C열(색 판정 열) 헤더가 '수량'인지 확인 — 열이 밀렸으면 발송 중단 + 회사메일 경보
   if (!assertColorColumn_(sheet, method)) return;
   const sheetName = sheet.getName().trim(); const analysis = analyzeRows(sheet); const { rows, sheetRows } = getRowsToSend(sheet);
@@ -344,7 +498,7 @@ function sendToAceIP(isManual) {
     if (!isManual && analysis.total > 0) sendZeroAlert(sheetName, analysis);
     return;
   }
-  let blob; try { blob = createExcelBlob(rows, sheetName); } catch (err) { writeLog({ sheetName, method, total: analysis.total, yellow: analysis.yellow, red: analysis.red, sent: 0, result: '❌ 첨부실패', note: err.message }); return; }
+  let blob; try { blob = createExcelBlob(rows, sheetName); } catch (err) { writeLog({ sheetName, method, total: analysis.total, yellow: analysis.yellow, red: analysis.red, sent: 0, result: '❌ 첨부실패', note: err.message }); alert_('[스카이티제이][긴급] 용지 발송 중단 — 첨부 생성 실패', `${sheetName} 엑셀 첨부를 만들지 못해 발송하지 못했습니다.\n오류: ${err.message}\n→ 메뉴 '지금 바로 재발송'으로 다시 시도`); return; }
   const subject = `[스카이티제이] 용지 발송 요청 ${sheetName} (${rows.length}건)${isManual ? '' : ' 자동발송'}`;
   const body = `안녕하세요, 에이스아이피 담당자님.\n스카이티제이입니다.\n\n발송 요청 드립니다.`;
   const recipient = CONFIG.TEST_MODE ? CONFIG.EMAIL_TEST : CONFIG.EMAIL_TO; const options = { attachments: [blob], name: '스카이티제이' }; if (!CONFIG.TEST_MODE) options.cc = CONFIG.EMAIL_CC;
@@ -356,7 +510,7 @@ function sendToAceIP(isManual) {
       sheetRows.forEach(r => sheet.getRange(r, 1, 1, lastCol).setBackground('#ffff00'));
       SpreadsheetApp.flush();
     } catch (colorErr) {
-      sendKakaoTalk(`[경고] 발송은 성공했으나 노란색 처리 중 오류 발생: ${colorErr.message} (수동으로 노란색 처리 필요)`);
+      alert_('[스카이티제이][긴급] 노란색 처리 실패 — 중복발송 위험', `발송 메일은 나갔지만 ${sheetName} ${sheetRows.length}행을 노란색으로 못 바꿨습니다.\n오류: ${colorErr.message}\n→ 다음 자동발송 전에 해당 행 C열을 직접 노란색 처리하세요.`);
     }
     // ★ V7: 송장 감시 등록 — 반송되거나 60분 내 송장이 안 들어오면 경보
     try { registerWatchBatch_(sheet, sheetRows, subject); }
@@ -367,7 +521,7 @@ function sendToAceIP(isManual) {
     writeLog({ sheetName, method, total: analysis.total, yellow: analysis.yellow, red: analysis.red, sent: rows.length, result: '✅ 성공', recipient: CONFIG.TEST_MODE ? 'TEST' : recipient });
   } catch (err) {
     writeLog({ sheetName, method, total: analysis.total, yellow: analysis.yellow, red: analysis.red, sent: rows.length, result: '❌ 메일실패', note: err.message });
-    sendKakaoTalk(`[비상] 메일 전송 실패: ${err.message}`);
+    alert_('[스카이티제이][긴급] 에이스아이피 발송 메일 전송 실패', `${sheetName} ${rows.length}건 발송요청 메일이 나가지 못했습니다.\n오류: ${err.message}\n→ 메뉴 '지금 바로 재발송' 또는 직접 발송`);
   }
 }
 
@@ -437,7 +591,7 @@ function isKoreanHoliday(date) {
     return holidays.indexOf(y + mo + d) !== -1;
   } catch (e) {
     // 공휴일 확인 실패 시: 안전을 위해 '공휴일로 간주'하여 발송을 건너뛰고 담당자에게 알림
-    try { sendKakaoTalk('[경고] 공휴일 확인 API 오류로 오늘 자동발송을 보류합니다: ' + e.message); } catch (e2) {}
+    try { alert_('[스카이티제이][긴급] 오늘 자동발송 보류 — 공휴일 확인 오류', '공휴일 확인 API 오류로 오늘 자동발송을 건너뛰었습니다.\n오류: ' + e.message + '\n→ 평일이면 메뉴 \'지금 바로 발송 (수동)\' 을 눌러 주세요.'); } catch (e2) {}
     return true;
   }
 }
@@ -480,7 +634,6 @@ function autoDailySend() {
   const decision = getDeliveryDecision_(now);
   if (!decision.canSend) {
     writeLog({ method: '자동', result: decision.mark + ' ' + decision.reason });
-    if (decision.reason === '공휴일') sendKakaoTalk(`[알림] 오늘은 공휴일이므로 자동발송을 건너뜁니다.`);
     return;
   }
   sendToAceIP(false);
@@ -756,7 +909,7 @@ function autoApplyTracking() {
 
   let data;
   try { data = fetchUnprocessedReplies_(); }
-  catch (e) { sendKakaoTalk(`[경고] 자동 송장반영 메일 검색 오류: ${e.message}`); return; }
+  catch (e) { alert_('[스카이티제이][경고] 자동 송장반영 — 메일 검색 오류', e.message); return; }
 
   const { label, results } = data;
   if (!results.length) return;
@@ -767,12 +920,12 @@ function autoApplyTracking() {
   results.forEach(r => {
     let entries;
     try { entries = parseReplyBlob_(r.blob); }
-    catch (e) { sendKakaoTalk(`[경고] 첨부 파싱 실패(${r.fileName}): ${e.message}`); return; }
+    catch (e) { alert_('[스카이티제이][경고] 자동 송장반영 — 첨부 파싱 실패', `${r.fileName}: ${e.message}\n→ 메뉴 '송장번호 반영'으로 직접 확인`); return; }
 
     if (!entries.length) { label.addToThread(r.thread); return; }
 
     const plan = buildTrackingPlan_(sheet, entries);
-    if (plan.error) { sendKakaoTalk(`[경고] 송장 반영 불가: ${plan.error}`); return; }
+    if (plan.error) { alert_('[스카이티제이][경고] 자동 송장반영 불가', `${r.fileName}: ${plan.error}`); return; }
 
     applyTrackingPlan_(sheet, plan);
     label.addToThread(r.thread);
@@ -794,14 +947,13 @@ function autoApplyTracking() {
   if (!totalUpdated && !totalSkipped && !totalUnmatched) return;
 
   const summary = `[스카이티제이] 자동 송장반영 결과\n반영: ${totalUpdated}건 · 건너뜀: ${totalSkipped}건 · 미매칭: ${totalUnmatched}건`;
-  sendKakaoTalk(summary);
   try {
     GmailApp.sendEmail(CONFIG.EMAIL_ALERT, '[스카이티제이] 자동 송장반영 결과',
       summary + (unmatchedDetails.length ? ('\n\n[미매칭 목록]\n' + unmatchedDetails.join('\n')) : ''));
   } catch (e) {}
 
   if (totalUnmatched > 0) {
-    sendKakaoTalk(`⚠️ 미매칭 ${totalUnmatched}건 발생! 시트에서 직접 확인이 필요합니다.`);
+    sendKakaoTalk(`[스카이티제이] ⚠️ 송장 미매칭 ${totalUnmatched}건 (반영 ${totalUpdated}건)\n시트에서 직접 확인이 필요합니다. 목록은 회사 메일 참고.`);
   }
 }
 
@@ -827,6 +979,10 @@ function onOpen() {
     .addItem('🏦 KIS 무상전표 수량 입력', 'kisInputFree')
     .addItem('📊 KIS 무상전표 현황 (일별·월누적)', 'kisShowStatus')
     .addItem('🔢 이번 달 이미 보낸 79*70 계산', 'kisRecalcBase')
+    .addSeparator()
+    .addItem('💬 카톡 알림 연결', 'kakaoConnect')
+    .addItem('💬 카톡 테스트 메시지', 'kakaoTest')
+    .addItem('💬 카톡 알림 연결 해제', 'kakaoDisconnect')
     .addSeparator()
     .addItem('⏰ 트리거 설정', 'setupTrigger')
     .addItem('⏰ 송장반영 자동감지 트리거 설정', 'setupTrackingTrigger')
