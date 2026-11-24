@@ -10,6 +10,10 @@
 | 가맹점 답장 초안 (사내용) | https://16612743sky1-web.github.io/skytj-tool/merchant-reply/ |
 | 클로드 사용량 대시보드 (개인용) | https://16612743sky1-web.github.io/skytj-tool/claude-usage/ |
 
+> 🗂 `apps-script/용지관리.gs` 는 구글시트 **용지관리 Apps Script(V8)** 사본이다 (웹 도구 아님).
+> 에이스아이피 14:50 자동발송·송장 반영·송장 감시·KIS 무상전표(79*70) 수량 관리.
+> 메일주소·인증키는 자리표시로 바꿔 두었으니 Apps Script 에 붙여넣을 때 실제 값을 넣는다.
+
 > 📦 **펫포커스 도구는 이사했습니다.** 재고/원가 관리·상세페이지 생성기는 이제
 > [`petfocus-inventory`](https://16612743sky1-web.github.io/petfocus-inventory/) 저장소에 있습니다.
 > 옛 주소(`/skytj-tool/petfocus/`, `/skytj-tool/petfocus-detail/`)로 들어가면 새 주소로 자동 이동합니다.
