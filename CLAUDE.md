@@ -38,6 +38,12 @@
 - `petfocus/`·`petfocus-detail/` 의 리다이렉트 stub 은 옛 북마크 보호용이다. 지우거나 앱을
   되돌려 넣지 말 것 — 펫포커스 실제 도구는 `petfocus-inventory` 저장소에서 관리한다.
 
+## 기록·백업 (2026-11-25)
+
+- **세션이 끝날 때 `docs/sessions/YYYY-MM-DD-<주제>.md` 에 요약을 남긴다** (한 일·결정·남은 일·관련 커밋). 대화는 30일 뒤 사라진다.
+- 백업은 GitHub(1차) + Google Drive `Claude 백업 (skytj)`(2차, 주간 예약 작업이 git bundle 업로드). 기준은 `docs/ops/README.md`.
+- 공개 저장소이므로 시트 ID·메일·전화번호·가맹점 정보·API 키는 커밋하지 않는다 (예약 작업 지시문 백업은 Drive 에만).
+
 ## 검증
 
 자동 테스트 없음. 변경 시 Playwright(`executablePath: '/opt/pw-browsers/chromium'`)로 파일을 직접 열어
