@@ -113,9 +113,12 @@ pre.txt .oo{background:#fef3c7;color:#92400e;border-radius:3px;padding:0 2px;}
     <details class="settings" id="settingsBox">
       <summary><span>⚙️ 회사 정보 설정 <span class="set-state" id="setState"></span></span><span class="sub" style="font-size:12px;color:var(--text3)">열기/닫기</span></summary>
       <div style="margin-top:12px">
-        <div class="info blue">회수 주소와 회사 연락처는 이 기기 브라우저에만 저장됩니다. 파일이나 인터넷에는 올라가지 않아요. 비워 두면 답장에 OOO로 나갑니다.</div>
+        <div class="info blue">회수 주소·회사 연락처·입금 계좌는 이 기기 브라우저에만 저장됩니다. 파일이나 인터넷에는 올라가지 않아요. 비워 두면 답장에 OOO로 나갑니다.</div>
         <div class="f"><label class="l">회수 주소 (택배 받을 곳)</label><input type="text" id="co_addr" autocomplete="off"></div>
         <div class="f"><label class="l">회사 연락처</label><input type="tel" id="co_tel" autocomplete="off"></div>
+        <div class="f"><label class="l">입금 은행</label><input type="text" id="co_bank" autocomplete="off" placeholder="예: OO은행"></div>
+        <div class="f"><label class="l">입금 계좌번호</label><input type="text" id="co_acctNo" inputmode="numeric" autocomplete="off"></div>
+        <div class="f"><label class="l">예금주</label><input type="text" id="co_holder" autocomplete="off"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary" id="co_save" type="button">이 기기에 저장</button>
           <button class="btn btn-ghost" id="co_del" type="button">저장된 회사 정보 지우기</button>
@@ -152,7 +155,8 @@ const LS_CO='mr_company_v1', LS_BANNER='mr_banner_closed';
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
 function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
-let CO={addr:'',tel:''};
+const CO_KEYS=['addr','tel','bank','acctNo','holder'];
+let CO={addr:'',tel:'',bank:'',acctNo:'',holder:''};
 try{const s=JSON.parse(lsGet(LS_CO)||'null');if(s)CO=Object.assign(CO,s);}catch(e){}
 
 /* ===== 공통 유틸 ===== */
@@ -501,6 +505,41 @@ memo:v=>commonMemo(v,'사업자변경(승계)')+line('양수인 연락처',v.pho
 missing:v=>[[v.relation,'양도·양수 관계'],[v.posEdu,'포스 교육 필요 여부'],[v.equipKeep,'장비 승계 여부'],[v.bizType,'양수인 사업자 유형']].filter(x=>!x[0]).map(x=>x[1]),
 };
 
+/* --- 판매·입금 --- */
+const SALE_PRESETS=[
+  {l:'79*80 · 55,000원',item:'포스용지(79*80)',unit:55000},
+  {l:'79*70 · 44,000원',item:'포스용지(79*70)',unit:44000},
+  {l:'79*80 특가 · 38,500원',item:'포스용지(79*80)',unit:38500},
+];
+function saleAmount(v){if(v.amount!==''&&v.amount!=null)return +v.amount;const u=+v.unit,q=+v.qty;return u>0&&q>0?u*q:null;}
+TYPES.sale={label:'판매·입금',sub:'소모품·입금안내',fields:[
+  {sec:'판매 내용'},
+  {k:'name',l:'상호 (메모용, 답장에는 안 들어감)',t:'text'},
+  {k:'preset',l:'빠른 선택',t:'chips',o:SALE_PRESETS.map(p=>p.l),
+    on:v=>{const p=SALE_PRESETS.find(x=>x.l===v.preset);if(p){v.item=p.item;v.unit=String(p.unit);v.amount='';}}},
+  {k:'item',l:'품목',t:'text',ph:'예: 포스용지(79*80)'},
+  {k:'qty',l:'수량 (Box)',t:'number',def:'1'},
+  {k:'unit',l:'1Box 금액 (원)',t:'number'},
+  {k:'amount',l:'입금액 (원, 비우면 금액 × 수량)',t:'number',ph:'자동'},
+  {info:()=>!(CO.bank&&CO.acctNo&&CO.holder)?['orange','입금 계좌가 설정돼 있지 않아 답장에 OOO로 나갑니다. 위 <b>회사 정보 설정</b>에서 입력하세요.']:null},
+  {sec:'처리 체크 (직원용)',staff:1},
+  {k:'paid',l:'입금 확인',t:'check'},
+  {k:'taxInv',l:'세금계산서 발행',t:'check'},
+  {k:'sugeum',l:'수금방 기록',t:'check'},
+],
+build(v,g){
+  const amt=saleAmount(v);
+  let r='항상 노고가 많으십니다.\n요청하신 '+g('item','품목')+' '+(v.qty||'1')+'Box\n세금계산서 발행용 입금계좌 안내 드립니다.\n\n';
+  r+=co('bank','입금 은행',g)+'\n'+co('acctNo','입금 계좌번호',g)+'\n예금주: '+co('holder','예금주',g)+'\n';
+  r+='입금액: '+(amt!=null?amt.toLocaleString('ko-KR')+'원':g('__amount','입금액'))+'\n\n';
+  r+='*입금자명은 반드시 대표자님 성함으로 입금 부탁드립니다. 감사합니다.';
+  return [{t:'가맹점 답장',kind:'m',text:r}];
+},
+memo:v=>{const amt=saleAmount(v);return '[판매·입금안내] '+todayStr()+'\n'+line('상호',v.name)+line('품목',v.item?v.item+' '+(v.qty||'1')+'Box':'')
+  +(amt!=null?'입금액: '+won(amt)+'\n':'')+'입금 확인: '+ox(v.paid)+' / 세금계산서: '+ox(v.taxInv)+' / 수금방: '+ox(v.sugeum)+'\n';},
+missing:v=>[[v.name,'상호'],[v.item,'품목'],[saleAmount(v)!=null,'입금액']].filter(x=>!x[0]).map(x=>x[1]),
+};
+
 /* ===== 메모 헬퍼 ===== */
 const ox=b=>b?'O':'X';
 const line=(k,val)=>val?k+': '+val+'\n':'';
@@ -567,6 +606,7 @@ function update(){
       +'<br>× 남은 '+c.months+'개월'+(c.auto?' (36개월 약정, 자동 계산)':' (직접 입력)')
       +'<br>위약금 <span class="big">'+won(c.penalty)+'</span>'+(cms?'<br>+ CMS 미납 '+won(cms)+' = 합계 <b>'+won(c.penalty+cms)+'</b>':'');}
     else cb.innerHTML='<span style="color:var(--text3)">월 임대료와 약정 시작일(또는 남은 개월)을 넣으면 위약금이 계산됩니다.</span>';}
+  const amEl=$('f_amount');if(amEl&&cur==='sale'){const u=+v.unit,q=+v.qty;amEl.placeholder=u>0&&q>0?'자동: '+(u*q).toLocaleString('ko-KR')+'원':'자동';}
   // 승계 이동 버튼
   const tb=$('toSuccession');if(tb)tb.onclick=()=>handoff('cancel','succ');
   renderOut();
@@ -612,7 +652,10 @@ $('form').addEventListener('input',e=>{const el=e.target;const k=el.dataset.k;if
 $('form').addEventListener('change',e=>{const el=e.target;const k=el.dataset.k;if(!k)return;
   STATE[cur][k]=el.type==='checkbox'?el.checked:el.value;update();});
 $('form').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;const k=c.parentElement.dataset.k;
-  STATE[cur][k]=STATE[cur][k]===c.dataset.v?'':c.dataset.v;update();});
+  STATE[cur][k]=STATE[cur][k]===c.dataset.v?'':c.dataset.v;
+  const fd=TYPES[cur].fields.find(f=>f.k===k&&f.on);if(fd){fd.on(STATE[cur]);syncInputs();}
+  update();});
+function syncInputs(){const v=STATE[cur];$('form').querySelectorAll('input[data-k],textarea[data-k]').forEach(el=>{const k=el.dataset.k;if(el.type==='checkbox')el.checked=!!v[k];else el.value=v[k]??'';});}
 $('outs').addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(!b)return;copyText($(b.dataset.copy).innerText,b);});
 $('clearAll').addEventListener('click',()=>{Object.keys(TYPES).forEach(t=>STATE[t]=defaults(t));renderForm();toast('입력 내용을 모두 지웠어요');});
 function copyText(t,btn){
@@ -629,10 +672,10 @@ function bannerLabel(){$('bannerToggle').textContent=bn.open?'접기 ▲':'펼�
 bannerLabel();bn.addEventListener('toggle',()=>{lsSet(LS_BANNER,bn.open?'0':'1');bannerLabel();});
 
 /* 회사 정보 */
-function coState(){const s=$('setState');s.className='set-state '+(CO.addr&&CO.tel?'ok':'no');s.textContent=CO.addr&&CO.tel?'(설정됨)':'(회수 주소·연락처 미설정)';}
-['addr','tel'].forEach(k=>$('co_'+k).value=CO[k]||'');
-$('co_save').onclick=()=>{['addr','tel'].forEach(k=>CO[k]=$('co_'+k).value.trim());toast(lsSet(LS_CO,JSON.stringify(CO))?'이 기기에 저장했어요':'저장 실패 — 이번 화면에서만 사용됩니다');coState();update();};
-$('co_del').onclick=()=>{lsDel(LS_CO);CO={addr:'',tel:''};['addr','tel'].forEach(k=>$('co_'+k).value='');coState();update();toast('회사 정보를 지웠어요');};
+function coState(){const s=$('setState');s.className='set-state '+(CO_KEYS.every(k=>CO[k])?'ok':'no');const miss=[];if(!(CO.addr&&CO.tel))miss.push('회수 주소·연락처');if(!(CO.bank&&CO.acctNo&&CO.holder))miss.push('입금 계좌');s.textContent=miss.length?'('+miss.join(', ')+' 미설정)':'(설정됨)';}
+CO_KEYS.forEach(k=>$('co_'+k).value=CO[k]||'');
+$('co_save').onclick=()=>{CO_KEYS.forEach(k=>CO[k]=$('co_'+k).value.trim());toast(lsSet(LS_CO,JSON.stringify(CO))?'이 기기에 저장했어요':'저장 실패 — 이번 화면에서만 사용됩니다');coState();update();};
+$('co_del').onclick=()=>{lsDel(LS_CO);CO={addr:'',tel:'',bank:'',acctNo:'',holder:''};CO_KEYS.forEach(k=>$('co_'+k).value='');coState();update();toast('회사 정보를 지웠어요');};
 coState();
 
 $('jump').onclick=()=>$('outCard').scrollIntoView({behavior:'smooth'});
